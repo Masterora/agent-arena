@@ -10,7 +10,7 @@ Agent Arena 是一个基于智能体对抗的 DeFi 策略竞技平台。用户�
 
 ## 技术栈
 
-- **后端**: Python 3.11 + FastAPI
+- **后端**: Python 3.14 + FastAPI
 - **数据处理**: Pandas + NumPy
 - **区块链**: Base L2 (Solidity)
 - **前端**: React + TypeScript (待开发)
@@ -20,6 +20,7 @@ Agent Arena 是一个基于智能体对抗的 DeFi 策略竞技平台。用户�
 ### 1. 安装依赖
 
 ```bash
+.\venv\Scripts\Activate.ps1
 cd backend
 pip install -r requirements.txt
 ```
