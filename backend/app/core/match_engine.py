@@ -73,29 +73,34 @@ class MatchEngine:
         for strategy_id, strategy_instance in self.strategies_instances.items():
             portfolio = self.portfolios[strategy_id]
 
-            # 策略决策
-            action = strategy_instance.decide(market_data, step)
+            try:
+                # 策略决策
+                action = strategy_instance.decide(market_data, step)
 
-            # 执行交易
-            if action.type == "buy":
-                self._execute_buy(portfolio, action, current_price)
-            elif action.type == "sell":
-                self._execute_sell(portfolio, action, current_price)
+                # 执行交易
+                if action.type == "buy":
+                    self._execute_buy(portfolio, action, current_price)
+                elif action.type == "sell":
+                    self._execute_sell(portfolio, action, current_price)
 
-            # 更新持仓价值
-            portfolio.update_value({"ETH": current_price})
+                # 更新持仓价值
+                portfolio.update_value({"ETH": current_price})
 
-            # 记录日志
-            match.execution_log.append({
-                "step": step,
-                "strategy_id": strategy_id,
-                "action": action.model_dump(),
-                "portfolio": {
-                    "cash": portfolio.cash,
-                    "positions": portfolio.positions,
-                    "total_value": portfolio.total_value
-                }
-            })
+                # 记录日志
+                match.execution_log.append({
+                    "step": step,
+                    "strategy_id": strategy_id,
+                    "action": action.model_dump(),
+                    "portfolio": {
+                        "cash": round(portfolio.cash, 2),
+                        "positions": {k: round(v, 4) for k, v in portfolio.positions.items()},
+                        "total_value": round(portfolio.total_value, 2)
+                    },
+                    "price": round(current_price, 2)
+                })
+            except Exception as e:
+                logger.error(f"策略 {strategy_id} 执行失败: {str(e)}")
+                # 继续执行其他策略
 
     def _execute_buy(self, portfolio: Portfolio, action: Action, price: float):
         """执行买入"""
@@ -142,6 +147,9 @@ class MatchEngine:
         portfolio.cash += actual_revenue
         portfolio.positions[action.asset] -= quantity
 
+        if portfolio.positions[action.asset] < 0.0001:
+            portfolio.positions[action.asset] = 0
+
         logger.debug(f"卖出: {quantity:.4f} {action.asset} @ {price:.2f}, 收入: {actual_revenue:.2f}")
 
     def finalize_match(self, match: Match) -> List[MatchResult]:
@@ -156,12 +164,18 @@ class MatchEngine:
             trades = [log for log in match.execution_log if log["strategy_id"] == strategy_id]
             total_trades = len([t for t in trades if t["action"]["type"] != "hold"])
 
+            # 计算盈利交易次数（简化版）
+            win_trades = 0
+            for i in range(1, len(trades)):
+                if trades[i]["portfolio"]["total_value"] > trades[i - 1]["portfolio"]["total_value"]:
+                    win_trades += 1
+
             results.append(MatchResult(
                 strategy_id=strategy_id,
-                final_value=final_value,
-                return_pct=return_pct,
+                final_value=round(final_value, 2),
+                return_pct=round(return_pct, 2),
                 total_trades=total_trades,
-                win_trades=0,  # 待实现
+                win_trades=win_trades,
                 rank=0  # 待排序
             ))
 

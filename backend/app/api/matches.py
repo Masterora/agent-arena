@@ -1,12 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from app.models.match import Match, MatchStatus, MatchConfig
 from app.core.match_engine import MatchEngine
 from app.core.market_data import MarketDataGenerator
 from app.api.strategies import strategies_db
 from loguru import logger
-import uuid
 
 router = APIRouter()
 
@@ -16,9 +15,10 @@ matches_db: List[Match] = []
 
 class RunMatchRequest(BaseModel):
     """运行比赛请求"""
-    strategy_ids: List[str]
-    market_type: str = "random"  # random, trending, ranging
-    duration_steps: int = 100
+    strategy_ids: List[str] = Field(..., min_length=2, max_length=10)
+    market_type: str = Field(default="random", pattern="^(random|trending|ranging)$")
+    duration_steps: int = Field(default=100, ge=10, le=500)
+    initial_capital: float = Field(default=10000.0, ge=1000, le=1000000)
 
 
 @router.post("/run", response_model=Match)
@@ -35,13 +35,15 @@ async def run_match(request: RunMatchRequest):
 
     # 创建比赛配置
     config = MatchConfig(
-        initial_capital=10000.0,
+        initial_capital=request.initial_capital,
         trading_pair="ETH/USDC",
         timeframe="5m",
         duration_steps=request.duration_steps
     )
 
     # 生成市场数据
+    logger.info(f"生成市场数据: {request.market_type}, {request.duration_steps} 步")
+
     if request.market_type == "trending":
         market_data = MarketDataGenerator.generate_trending(steps=request.duration_steps)
     elif request.market_type == "ranging":
@@ -65,13 +67,14 @@ async def run_match(request: RunMatchRequest):
         # 保存比赛结果
         matches_db.append(match)
 
-        logger.info(f"比赛执行完成: {match.id}")
+        logger.info(f"比赛执行完成: {match.id}, 参赛策略: {len(strategies)}")
 
         return match
 
     except Exception as e:
-        logger.error(f"比赛执行失败: {str(e)}")
+        logger.error(f"比赛执行失败: {str(e)}", exc_info=True)
         match.status = MatchStatus.FAILED
+        matches_db.append(match)
         raise HTTPException(status_code=500, detail=f"比赛执行失败: {str(e)}")
 
 

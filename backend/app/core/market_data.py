@@ -27,12 +27,12 @@ class MarketDataGenerator:
 
         for i, price in enumerate(prices):
             klines.append({
-                "timestamp": base_time + timedelta(minutes=i * 5),
-                "open": price * (1 + np.random.uniform(-0.005, 0.005)),
-                "high": price * (1 + abs(np.random.uniform(0, 0.01))),
-                "low": price * (1 - abs(np.random.uniform(0, 0.01))),
-                "close": price,
-                "volume": np.random.uniform(100, 1000)
+                "timestamp": (base_time + timedelta(minutes=i * 5)).isoformat(),
+                "open": round(price * (1 + np.random.uniform(-0.005, 0.005)), 2),
+                "high": round(price * (1 + abs(np.random.uniform(0, 0.01))), 2),
+                "low": round(price * (1 - abs(np.random.uniform(0, 0.01))), 2),
+                "close": round(price, 2),
+                "volume": round(np.random.uniform(100, 1000), 2)
             })
 
         return klines
@@ -64,12 +64,12 @@ class MarketDataGenerator:
             price = center_price * (1 + np.random.uniform(-range_pct, range_pct))
 
             klines.append({
-                "timestamp": base_time + timedelta(minutes=i * 5),
-                "open": price * (1 + np.random.uniform(-0.005, 0.005)),
-                "high": price * (1 + abs(np.random.uniform(0, 0.01))),
-                "low": price * (1 - abs(np.random.uniform(0, 0.01))),
-                "close": price,
-                "volume": np.random.uniform(100, 1000)
+                "timestamp": (base_time + timedelta(minutes=i * 5)).isoformat(),
+                "open": round(price * (1 + np.random.uniform(-0.005, 0.005)), 2),
+                "high": round(price * (1 + abs(np.random.uniform(0, 0.01))), 2),
+                "low": round(price * (1 - abs(np.random.uniform(0, 0.01))), 2),
+                "close": round(price, 2),
+                "volume": round(np.random.uniform(100, 1000), 2)
             })
 
         return klines

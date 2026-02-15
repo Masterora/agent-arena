@@ -1,0 +1,31 @@
+创建策略
+# 策略 1: 均值回归
+curl -X POST http://localhost:8000/api/strategies/ ^
+  -H "Content-Type: application/json" ^
+  -d "{\"name\":\"均值回归策略\",\"type\":\"mean_reversion\",\"params\":{\"lookback_period\":20,\"buy_threshold\":0.97,\"sell_threshold\":1.03,\"position_size\":0.2,\"max_position_pct\":0.5}}"
+
+# 策略 2: 动量策略
+curl -X POST http://localhost:8000/api/strategies/ ^
+  -H "Content-Type: application/json" ^
+  -d "{\"name\":\"动量追踪策略\",\"type\":\"momentum\",\"params\":{\"lookback_period\":10,\"buy_threshold\":1.02,\"sell_threshold\":0.98,\"position_size\":0.3,\"max_position_pct\":0.5}}"
+
+# 策略 3: 定投策略
+curl -X POST http://localhost:8000/api/strategies/ ^
+  -H "Content-Type: application/json" ^
+  -d "{\"name\":\"定投策略\",\"type\":\"dca\",\"params\":{\"lookback_period\":10,\"buy_threshold\":0.97,\"sell_threshold\":1.03,\"position_size\":0.1,\"max_position_pct\":0.5}}"
+
+查看策略列表
+curl http://localhost:8000/api/strategies/
+
+运行比赛
+# 替换下面的 strategy-xxx 为实际的策略 ID
+curl -X POST http://localhost:8000/api/matches/run ^
+  -H "Content-Type: application/json" ^
+  -d "{\"strategy_ids\":[\"strategy-xxx\",\"strategy-yyy\",\"strategy-zzz\"],\"market_type\":\"trending\",\"duration_steps\":100}"
+
+查看比赛结果
+# 查看所有比赛
+curl http://localhost:8000/api/matches/
+
+# 查看具体比赛（替换 match-xxx 为实际 ID）
+curl http://localhost:8000/api/matches/match-xxx
