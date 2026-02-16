@@ -20,20 +20,52 @@ Agent Arena 是一个基于智能体对抗的 DeFi 策略竞技平台。用户�
 ### 1. 安装依赖
 
 ```bash
-.\venv\Scripts\Activate.ps1
 cd backend
+python -m venv venv
+.\venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-### 2. 启动服务
-
+### 2. 创建 .env 文件
 ```bash
-uvicorn app.main:app --reload
+cp .env.example .env
 ```
 
-### 3. 访问 API 文档
+### 3. 初始化数据库
 
-打开浏览器访问: http://localhost:8000/docs
+```bash
+python -c "from app.database import init_db; init_db()"
+```
+
+### 4. 启动服务
+
+```bash
+uvicorn app.main:app --reload --host 127.0.0.1 --port 9000
+```
+
+### 5. 访问 API 文档
+
+打开浏览器访问: http://localhost:9000/docs
+
+### 6. 创建生产环境配置
+```bash
+cp .env.example .env.prod
+```
+
+#### 编辑 .env.prod，设置生产环境变量
+```bash
+nano .env.prod
+```
+
+#### 使用生产配置启动
+```bash
+docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
+```
+
+#### 查看状态
+```bash
+docker-compose -f docker-compose.prod.yml ps
+```
 
 ## 项目结构
 

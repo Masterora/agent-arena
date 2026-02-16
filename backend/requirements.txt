@@ -4,9 +4,21 @@ uvicorn[standard]>=0.32.0
 pydantic>=2.10.0
 pydantic-settings>=2.6.0
 
-# 数据处理 - 使用最新版本
+# 数据处理
 pandas>=2.2.0
 numpy>=2.0.0
+
+# 数据库
+sqlalchemy>=2.0.25
+asyncpg>=0.29.0
+psycopg2-binary>=2.9.9
+alembic>=1.13.1
+
+# SQLite 异步支持（可选）
+aiosqlite>=0.19.0
+
+# 缓存
+redis>=5.0.1
 
 # 沙盒安全
 RestrictedPython>=8.0
