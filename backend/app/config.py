@@ -1,4 +1,5 @@
 from pydantic_settings import BaseSettings
+from pydantic import computed_field
 from typing import Optional, List
 import json
 
@@ -56,6 +57,12 @@ class Settings(BaseSettings):
     # 交易配置
     fee_rate: float = 0.002  # 0.2%
     slippage_rate: float = 0.001  # 0.1%
+
+    @computed_field
+    @property
+    def is_sqlite(self) -> bool:
+        """判断是否使用 SQLite 数据库"""
+        return self.database_url.startswith("sqlite")
 
     class Config:
         env_file = ".env"
