@@ -28,3 +28,10 @@ export interface StrategyCreate {
   params: StrategyParams;
   code?: string;
 }
+
+export interface StrategyUpdate {
+  name?: string;
+  type?: StrategyType;
+  params?: StrategyParams;
+  code?: string;
+}

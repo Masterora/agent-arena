@@ -11,16 +11,18 @@ export interface MatchParticipant {
   rank?: number;
 }
 
+export interface MatchConfig {
+  initial_capital: number;
+  trading_pair: string;
+  timeframe: string;
+  duration_steps: number;
+  market_type?: MarketType;
+}
+
 export interface Match {
   id: string;
   status: MatchStatus;
-  config: {
-    initial_capital: number;
-    trading_pair: string;
-    timeframe: string;
-    duration_steps: number;
-    market_type?: MarketType;
-  };
+  config: MatchConfig;
   created_at: string;
   start_time?: string;
   end_time?: string;
