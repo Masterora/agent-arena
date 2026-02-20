@@ -236,3 +236,44 @@ async def get_match(
         ]
 
     return result
+
+@router.get("/")
+async def list_matches(
+        skip: int = 0,
+        limit: int = 100,
+        status: Optional[str] = None,
+        db: Session = Depends(get_db)
+):
+    """获取比赛列表"""
+    db_matches = MatchCRUD.get_all(db, skip=skip, limit=limit, status=status)
+
+    return [
+        {
+            "id": m.id,
+            "status": m.status,
+            "config": {
+                "initial_capital": m.initial_capital,
+                "trading_pair": m.trading_pair,
+                "timeframe": m.timeframe,
+                "duration_steps": m.duration_steps,
+                "market_type": m.market_type
+            },
+            "created_at": m.created_at.isoformat(),
+            "start_time": m.start_time.isoformat() if m.start_time else None,
+            "end_time": m.end_time.isoformat() if m.end_time else None,
+            "participants_count": len(m.participants),
+            "participants": [
+                {
+                    "strategy_id": p.strategy_id,
+                    "strategy_name": p.strategy.name if p.strategy else None,
+                    "final_value": p.final_value,
+                    "return_pct": p.return_pct,
+                    "total_trades": p.total_trades,
+                    "win_trades": p.win_trades,
+                    "rank": p.rank
+                }
+                for p in m.participants
+            ]
+        }
+        for m in db_matches
+    ]

@@ -1,5 +1,5 @@
-export type MatchStatus = 'pending' | 'running' | 'completed' | 'failed';
-export type MarketType = 'random' | 'trending' | 'ranging';
+export type MatchStatus = "pending" | "running" | "completed" | "failed";
+export type MarketType = "random" | "trending" | "ranging";
 
 export interface MatchParticipant {
   strategy_id: string;
@@ -27,7 +27,8 @@ export interface Match {
   start_time?: string;
   end_time?: string;
   participants: MatchParticipant[];
-  logs?: any[];
+  participants_count?: number;
+  logs?: string[];
 }
 
 export interface RunMatchRequest {
