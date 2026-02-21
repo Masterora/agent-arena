@@ -135,7 +135,7 @@ const Matches: React.FC = () => {
           <div className="text-2xl font-bold text-primary-600">
             {matches.length > 0
               ? (
-                  matches.reduce((sum, m) => sum + m.participants.length, 0) /
+                  matches.reduce((sum, m) => sum + (m.participants?.length ?? 0), 0) /
                   matches.length
                 ).toFixed(1)
               : 0}

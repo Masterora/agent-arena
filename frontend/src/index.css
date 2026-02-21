@@ -1,6 +1,9 @@
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+  font-family:
+    "Segoe UI",
+    Trebuchet MS,
+    sans-serif;
+  line-height: 1.6;
   font-weight: 400;
 
   color-scheme: light dark;
@@ -24,10 +27,7 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
   min-width: 320px;
-  min-height: 100vh;
 }
 
 h1 {
@@ -76,22 +76,31 @@ button:focus-visible {
     @apply border-border;
   }
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900;
+  }
+  html {
+    scroll-behavior: smooth;
   }
 }
 
 @layer components {
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-colors;
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
   }
   .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700;
+    @apply bg-primary-600 text-white hover:bg-primary-700 hover:shadow-lg hover:shadow-primary-600/30 active:scale-95;
   }
   .btn-secondary {
-    @apply bg-gray-200 text-gray-900 hover:bg-gray-300;
+    @apply bg-gray-200 text-gray-900 hover:bg-gray-300 hover:shadow-md active:scale-95;
+  }
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/30 active:scale-95;
   }
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+    @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 p-6;
+  }
+  .card-hover {
+    @apply hover:border-primary-200 hover:shadow-lg hover:shadow-primary-50;
   }
 }
 

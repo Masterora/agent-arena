@@ -22,7 +22,7 @@ const statusColors: Record<string, string> = {
 };
 
 export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
-  const topParticipant = match.participants
+  const topParticipant = (match.participants ?? [])
     .filter((p) => p.rank === 1)
     .sort((a, b) => (b.return_pct || 0) - (a.return_pct || 0))[0];
 
@@ -34,7 +34,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="text-lg font-semibold text-gray-900">
-                {match.config.trading_pair} 比赛
+                {match.config?.trading_pair || "未知"} 比赛
               </h3>
               <span
                 className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -53,7 +53,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
               </div>
               <div className="flex items-center gap-1">
                 <Clock className="h-4 w-4" />
-                <span>{match.config.duration_steps} 步</span>
+                <span>{match.config?.duration_steps || 0} 步</span>
               </div>
             </div>
           </div>
@@ -64,13 +64,13 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
           <div>
             <span className="text-gray-500">初始资金</span>
             <p className="font-medium">
-              ${match.config.initial_capital.toLocaleString()}
+              ${(match.config?.initial_capital || 0).toLocaleString()}
             </p>
           </div>
           <div>
             <span className="text-gray-500">市场类型</span>
             <p className="font-medium capitalize">
-              {match.config.market_type || "random"}
+              {match.config?.market_type || "random"}
             </p>
           </div>
         </div>
@@ -80,7 +80,7 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Users className="h-4 w-4" />
-              <span>{match.participants.length} 个策略参赛</span>
+              <span>{(match.participants ?? []).length} 个策略参赛</span>
             </div>
             {match.status === "completed" && topParticipant && (
               <div className="flex items-center gap-1 text-sm">
@@ -93,9 +93,9 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match }) => {
           </div>
 
           {/* 排名预览 */}
-          {match.status === "completed" && match.participants.length > 0 && (
+          {match.status === "completed" && (match.participants ?? []).length > 0 && (
             <div className="space-y-2">
-              {match.participants
+              {(match.participants ?? [])
                 .sort((a, b) => (a.rank || 999) - (b.rank || 999))
                 .slice(0, 3)
                 .map((participant) => (

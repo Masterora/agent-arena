@@ -3,6 +3,7 @@ import { Plus, Filter } from "lucide-react";
 import { Button } from "../components/common/Button";
 import { StrategyList } from "../components/strategy/StrategyList";
 import { StrategyForm } from "../components/strategy/StrategyForm";
+import { StrategyStatsChart } from '../components/strategy/StrategyStatsChart';
 import { Toast } from "../components/common/Toast";
 import { useToast } from "../hooks/useToast";
 import {
@@ -87,8 +88,6 @@ const Strategies: React.FC = () => {
           onClose={() => removeToast(toast.id)}
         />
       ))}
-
-      {/* ... 其余代码保持不变 ... */}
 
       {/* 头部 */}
       <div className="flex items-center justify-between">
@@ -201,6 +200,11 @@ const Strategies: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* 策略性能图表 */}
+      {strategies.length > 0 && strategies.some(s => s.total_matches > 0) && (
+        <StrategyStatsChart strategies={strategies} />
+      )}
 
       {/* 策略列表 */}
       <StrategyList
