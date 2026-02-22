@@ -41,26 +41,36 @@ export const StrategyStatsChart: React.FC<StrategyStatsChartProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+    <div className="card">
+      <h3 className="text-lg font-semibold text-gradient mb-4">
         策略性能排行 (Top 10)
       </h3>
       <ResponsiveContainer width="100%" height={400}>
         <BarChart data={data} layout="vertical">
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-          <XAxis type="number" stroke="#6b7280" />
-          <YAxis dataKey="name" type="category" width={150} stroke="#6b7280" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+          <XAxis type="number" stroke="#94a3b8" style={{ color: "#94a3b8" }} />
+          <YAxis
+            dataKey="name"
+            type="category"
+            width={150}
+            stroke="#94a3b8"
+            style={{ color: "#94a3b8" }}
+          />
           <Tooltip
             contentStyle={{
-              backgroundColor: "#fff",
-              border: "1px solid #e5e7eb",
+              backgroundColor: "#1e293b",
+              border: "1px solid #475569",
               borderRadius: "8px",
+              color: "#e2e8f0",
             }}
-            formatter={(value: number | undefined, name: string | undefined): [string, string] => {
+            formatter={(
+              value: number | undefined,
+              name: string | undefined,
+            ): [string, string] => {
               const numValue = value ?? 0;
               if (name === "avgReturn")
                 return [`${numValue.toFixed(2)}%`, "平均收益"];
-              if (name === "winRate") 
+              if (name === "winRate")
                 return [`${numValue.toFixed(1)}%`, "胜率"];
               return [String(numValue), name ?? ""];
             }}

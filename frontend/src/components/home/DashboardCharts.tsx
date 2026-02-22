@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from "react";
 import {
   LineChart,
   Line,
@@ -9,41 +9,53 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from 'recharts';
+} from "recharts";
 
 interface DashboardChartsProps {
   strategiesCount: number;
-  matchesCount: number;
 }
 
 export const DashboardCharts: React.FC<DashboardChartsProps> = ({
   strategiesCount,
-  matchesCount,
 }) => {
-  // 模拟最近 7 天的数据
-  const recentActivity = Array.from({ length: 7 }, (_, i) => ({
-    day: `${i + 1}天前`,
-    matches: Math.floor(Math.random() * 10) + 1,
-    strategies: Math.floor(Math.random() * 5) + 1,
-  })).reverse();
+  // 生成稳定的模拟数据（基于当前日期的哈希值）
+  const recentActivity = useMemo(() => {
+    const data = [];
+    const seed = new Date().toDateString(); // 每天种子相同
+    const seedHash = seed.split("").reduce((a, b) => a + b.charCodeAt(0), 0);
+
+    for (let i = 0; i < 7; i++) {
+      // 使用确定性的伪随机数生成
+      const pseudo1 = Math.sin(seedHash + i * 7123.456) * 10000;
+      const pseudo2 = Math.sin(seedHash + i * 3456.789) * 5000;
+
+      data.push({
+        day: `${i + 1}天前`,
+        matches: Math.floor(Math.abs(pseudo1) % 10) + 1,
+        strategies: Math.floor(Math.abs(pseudo2) % 5) + 1,
+      });
+    }
+    return data.reverse();
+  }, []);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* 最近活动 */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <div className="card">
+        <h3 className="text-lg font-semibold text-gradient mb-4">
           最近活动趋势
         </h3>
         <ResponsiveContainer width="100%" height={250}>
           <LineChart data={recentActivity}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="day" stroke="#6b7280" />
-            <YAxis stroke="#6b7280" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+            <XAxis dataKey="day" stroke="#94a3b8" />
+            <YAxis stroke="#94a3b8" />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#fff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
+                backgroundColor: "#1e293b",
+                border: "1px solid #475569",
+                borderRadius: "8px",
+                color: "#e2e8f0",
               }}
             />
             <Line
@@ -52,6 +64,7 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
               stroke="#3b82f6"
               strokeWidth={2}
               name="比赛"
+              dot={{ fill: "#3b82f6" }}
             />
             <Line
               type="monotone"
@@ -59,36 +72,38 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
               stroke="#10b981"
               strokeWidth={2}
               name="策略"
+              dot={{ fill: "#10b981" }}
             />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       {/* 策略类型分布 */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <div className="card">
+        <h3 className="text-lg font-semibold text-gradient mb-4">
           策略类型分布
         </h3>
         <ResponsiveContainer width="100%" height={250}>
           <BarChart
             data={[
-              { type: '均值回归', count: Math.floor(strategiesCount * 0.4) },
-              { type: '动量追踪', count: Math.floor(strategiesCount * 0.3) },
-              { type: '定投策略', count: Math.floor(strategiesCount * 0.2) },
-              { type: '自定义', count: Math.floor(strategiesCount * 0.1) },
+              { type: "均值回归", count: Math.floor(strategiesCount * 0.4) },
+              { type: "动量追踪", count: Math.floor(strategiesCount * 0.3) },
+              { type: "定投策略", count: Math.floor(strategiesCount * 0.2) },
+              { type: "自定义", count: Math.floor(strategiesCount * 0.1) },
             ]}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-            <XAxis dataKey="type" stroke="#6b7280" />
-            <YAxis stroke="#6b7280" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+            <XAxis dataKey="type" stroke="#94a3b8" />
+            <YAxis stroke="#94a3b8" />
             <Tooltip
               contentStyle={{
-                backgroundColor: '#fff',
-                border: '1px solid #e5e7eb',
-                borderRadius: '8px',
+                backgroundColor: "#1e293b",
+                border: "1px solid #475569",
+                borderRadius: "8px",
+                color: "#e2e8f0",
               }}
             />
-            <Bar dataKey="count" fill="#3b82f6" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="count" fill="#6366f1" radius={[8, 8, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

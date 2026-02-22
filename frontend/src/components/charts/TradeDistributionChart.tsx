@@ -24,8 +24,8 @@ export const TradeDistributionChart: React.FC<TradeDistributionChartProps> = ({
   }));
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">交易次数分布</h3>
+    <div className="card">
+      <h3 className="text-lg font-semibold text-gradient mb-4">交易次数分布</h3>
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
           <Pie
@@ -47,8 +47,15 @@ export const TradeDistributionChart: React.FC<TradeDistributionChartProps> = ({
               />
             ))}
           </Pie>
-          <Tooltip />
-          <Legend />
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "#1e293b",
+              border: "1px solid #475569",
+              borderRadius: "8px",
+              color: "#e2e8f0",
+            }}
+          />
+          <Legend wrapperStyle={{ color: "#94a3b8" }} />
         </PieChart>
       </ResponsiveContainer>
     </div>

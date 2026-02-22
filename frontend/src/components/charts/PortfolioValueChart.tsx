@@ -61,8 +61,8 @@ export const PortfolioValueChart: React.FC<PortfolioValueChartProps> = ({
   const data = generatePortfolioData(participants, initialCapital, steps);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">资金变化趋势</h3>
+    <div className="card">
+      <h3 className="text-lg font-semibold text-gradient mb-4">资金变化趋势</h3>
       <ResponsiveContainer width="100%" height={400}>
         <AreaChart data={data}>
           <defs>
@@ -88,23 +88,33 @@ export const PortfolioValueChart: React.FC<PortfolioValueChartProps> = ({
               </linearGradient>
             ))}
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
           <XAxis
             dataKey="step"
             label={{ value: "时间步数", position: "insideBottom", offset: -5 }}
-            stroke="#6b7280"
+            stroke="#94a3b8"
+            style={{ color: "#94a3b8" }}
           />
           <YAxis
-            label={{ value: "资金 ($)", angle: -90, position: "insideLeft" }}
-            stroke="#6b7280"
+            label={{
+              value: "资金 ($)",
+              angle: -90,
+              position: "insideLeft",
+              style: { color: "#94a3b8" },
+            }}
+            stroke="#94a3b8"
+            style={{ color: "#94a3b8" }}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: "#fff",
-              border: "1px solid #e5e7eb",
+              backgroundColor: "#1e293b",
+              border: "1px solid #475569",
               borderRadius: "8px",
+              color: "#e2e8f0",
             }}
-            formatter={(value: number | undefined) => `$${(value ?? 0).toFixed(2)}`}
+            formatter={(value: number | undefined) =>
+              `$${(value ?? 0).toFixed(2)}`
+            }
           />
           {participants.map((p, index) => (
             <Area

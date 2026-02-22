@@ -38,3 +38,15 @@ export const useDeleteStrategy = () => {
     },
   });
 };
+
+export const useUpdateStrategy = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<StrategyCreate> }) =>
+      strategiesApi.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["strategies"] });
+    },
+  });
+};

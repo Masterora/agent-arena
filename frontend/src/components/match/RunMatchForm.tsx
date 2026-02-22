@@ -9,19 +9,25 @@ interface RunMatchFormProps {
   onSubmit: (data: RunMatchRequest) => void;
   onCancel: () => void;
   isLoading?: boolean;
+  defaultValues?: Partial<RunMatchRequest>;
+  title?: string;
 }
 
 export const RunMatchForm: React.FC<RunMatchFormProps> = ({
   onSubmit,
   onCancel,
   isLoading = false,
+  defaultValues,
+  title = "运行新比赛",
 }) => {
   const { data: strategies = [] } = useStrategies();
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>(
+    defaultValues?.strategy_ids ?? [],
+  );
   const [config, setConfig] = useState({
-    market_type: "random" as MarketType,
-    duration_steps: 100,
-    initial_capital: 10000,
+    market_type: (defaultValues?.market_type ?? "random") as MarketType,
+    duration_steps: defaultValues?.duration_steps ?? 100,
+    initial_capital: defaultValues?.initial_capital ?? 10000,
   });
 
   const handleSelectStrategy = (strategyId: string) => {
@@ -45,30 +51,32 @@ export const RunMatchForm: React.FC<RunMatchFormProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-xl max-w-6xl w-full my-8">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="form-container max-w-6xl w-full my-8">
         {/* 头部 */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between pb-6 border-b border-slate-700/50 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">运行新比赛</h2>
-            <p className="text-sm text-gray-600 mt-1">选择策略并配置比赛参数</p>
+            <h2 className="text-2xl font-bold text-gradient">{title}</h2>
+            <p className="text-sm text-slate-400 mt-1">
+              选择策略并配置比赛参数
+            </p>
           </div>
           <button
             onClick={onCancel}
-            className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 rounded-lg transition-all duration-200"
           >
             <X className="h-6 w-6" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* 比赛配置 */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">比赛配置</h3>
+          <div className="form-section space-y-4">
+            <h3 className="text-lg font-semibold text-gradient">比赛配置</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   市场类型
                 </label>
                 <select
@@ -79,17 +87,19 @@ export const RunMatchForm: React.FC<RunMatchFormProps> = ({
                       market_type: e.target.value as MarketType,
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="input"
                 >
                   <option value="random">随机波动</option>
                   <option value="trending">上涨趋势</option>
                   <option value="ranging">震荡行情</option>
                 </select>
-                <p className="text-xs text-gray-500 mt-1">选择模拟的市场环境</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  选择模拟的市场环境
+                </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   比赛时长（步数）
                 </label>
                 <input
@@ -101,18 +111,18 @@ export const RunMatchForm: React.FC<RunMatchFormProps> = ({
                       duration_steps: parseInt(e.target.value),
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="input"
                   min="10"
                   max="500"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   10-500 步，每步代表一个时间周期
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
                   初始资金
                 </label>
                 <input
@@ -124,28 +134,30 @@ export const RunMatchForm: React.FC<RunMatchFormProps> = ({
                       initial_capital: parseFloat(e.target.value),
                     })
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="input"
                   min="1000"
                   max="1000000"
                   step="1000"
                   required
                 />
-                <p className="text-xs text-gray-500 mt-1">每个策略的起始资金</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  每个策略的起始资金
+                </p>
               </div>
             </div>
           </div>
 
           {/* 策略选择 */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
+          <div className="form-section space-y-4">
+            <div className="flex items-center justify-between flex-wrap">
+              <h3 className="text-lg font-semibold text-gradient">
                 选择策略 ({selectedIds.length}/10)
               </h3>
               {selectedIds.length > 0 && (
                 <button
                   type="button"
                   onClick={() => setSelectedIds([])}
-                  className="text-sm text-gray-600 hover:text-gray-900"
+                  className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
                 >
                   清空选择
                 </button>
@@ -153,14 +165,14 @@ export const RunMatchForm: React.FC<RunMatchFormProps> = ({
             </div>
 
             {strategies.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-lg">
-                <p className="text-gray-600">暂无可用策略</p>
-                <p className="text-sm text-gray-500 mt-1">
+              <div className="text-center py-12 bg-slate-800/30 rounded-lg border border-slate-700/50">
+                <p className="text-slate-300">暂无可用策略</p>
+                <p className="text-sm text-slate-500 mt-1">
                   请先创建至少 2 个策略
                 </p>
               </div>
             ) : (
-              <div className="max-h-[400px] overflow-y-auto">
+              <div className="max-h-[400px] overflow-y-auto rounded-lg border border-slate-700/30 p-3 bg-slate-800/20">
                 <StrategyList
                   strategies={strategies}
                   onSelect={(strategy) => handleSelectStrategy(strategy.id)}
@@ -171,10 +183,10 @@ export const RunMatchForm: React.FC<RunMatchFormProps> = ({
           </div>
 
           {/* 提交按钮 */}
-          <div className="flex gap-3 pt-4 border-t border-gray-200">
+          <div className="flex gap-3 pt-4">
             <Button
               type="submit"
-              className="flex-1"
+              className="flex-1 btn-primary"
               isLoading={isLoading}
               disabled={selectedIds.length < 2}
             >
@@ -183,7 +195,7 @@ export const RunMatchForm: React.FC<RunMatchFormProps> = ({
             </Button>
             <Button
               type="button"
-              variant="secondary"
+              className="btn-secondary"
               onClick={onCancel}
               disabled={isLoading}
             >
@@ -192,7 +204,7 @@ export const RunMatchForm: React.FC<RunMatchFormProps> = ({
           </div>
 
           {selectedIds.length < 2 && selectedIds.length > 0 && (
-            <p className="text-sm text-yellow-600 text-center">
+            <p className="text-sm text-amber-400 text-center">
               ⚠️ 至少需要选择 2 个策略才能开始比赛
             </p>
           )}

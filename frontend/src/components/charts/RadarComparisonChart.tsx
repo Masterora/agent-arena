@@ -69,24 +69,34 @@ export const RadarComparisonChart: React.FC<RadarComparisonChartProps> = ({
   });
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+    <div className="card">
+      <h3 className="text-lg font-semibold text-gradient mb-4">
         策略性能雷达图
       </h3>
       <ResponsiveContainer width="100%" height={400}>
         <RadarChart data={data}>
-          <PolarGrid stroke="#e5e7eb" />
-          <PolarAngleAxis dataKey="metric" stroke="#6b7280" />
-          <PolarRadiusAxis angle={90} domain={[0, 100]} stroke="#6b7280" />
+          <PolarGrid stroke="#334155" />
+          <PolarAngleAxis
+            dataKey="metric"
+            stroke="#94a3b8"
+            style={{ color: "#94a3b8" }}
+          />
+          <PolarRadiusAxis
+            angle={90}
+            domain={[0, 100]}
+            stroke="#94a3b8"
+            style={{ color: "#94a3b8" }}
+          />
           <Tooltip
             contentStyle={{
-              backgroundColor: "#fff",
-              border: "1px solid #e5e7eb",
+              backgroundColor: "#1e293b",
+              border: "1px solid #475569",
               borderRadius: "8px",
+              color: "#e2e8f0",
             }}
             formatter={(value: number | undefined) => (value ?? 0).toFixed(1)}
           />
-          <Legend />
+          <Legend wrapperStyle={{ color: "#94a3b8" }} />
           {participants.slice(0, 5).map((p, index) => (
             <Radar
               key={p.strategy_id}

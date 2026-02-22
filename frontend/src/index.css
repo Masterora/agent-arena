@@ -1,122 +1,311 @@
-:root {
-  font-family:
-    "Segoe UI",
-    Trebuchet MS,
-    sans-serif;
-  line-height: 1.6;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-}
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
+  html {
+    @apply h-full scroll-smooth;
+  }
+
+  body {
+    @apply h-full m-0 p-0 bg-black text-slate-100;
+  }
+
+  #root {
+    @apply h-full;
+  }
+
   * {
     @apply border-border;
   }
-  body {
-    @apply bg-gradient-to-br from-gray-50 to-gray-100 text-gray-900;
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold tracking-tight;
   }
-  html {
-    scroll-behavior: smooth;
+
+  h1 {
+    @apply text-4xl md:text-5xl lg:text-6xl text-slate-100;
+  }
+
+  h2 {
+    @apply text-3xl md:text-4xl text-slate-100;
+  }
+
+  h3 {
+    @apply text-2xl md:text-3xl text-slate-100;
+  }
+
+  h4,
+  h5,
+  h6 {
+    @apply text-slate-100;
+  }
+
+  p {
+    @apply leading-relaxed;
+  }
+
+  a {
+    @apply transition-colors duration-200 no-underline hover:no-underline;
+  }
+
+  /* 移除链接下划线 */
+  a,
+  a:hover,
+  a:visited,
+  a:active {
+    text-decoration: none !important;
   }
 }
 
 @layer components {
-  .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
-  }
-  .btn-primary {
-    @apply bg-primary-600 text-white hover:bg-primary-700 hover:shadow-lg hover:shadow-primary-600/30 active:scale-95;
-  }
-  .btn-secondary {
-    @apply bg-gray-200 text-gray-900 hover:bg-gray-300 hover:shadow-md active:scale-95;
-  }
-  .btn-danger {
-    @apply bg-red-600 text-white hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/30 active:scale-95;
-  }
+  /* 深色卡片设计 */
   .card {
-    @apply bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 p-6;
+    @apply bg-slate-900/50 backdrop-blur-sm rounded-2xl shadow-xl border border-slate-700/50 p-6 md:p-8 transition-all duration-300 hover:shadow-2xl hover:shadow-indigo-500/20 hover:border-indigo-500/30 hover:bg-slate-900/70;
   }
-  .card-hover {
-    @apply hover:border-primary-200 hover:shadow-lg hover:shadow-primary-50;
+
+  .card-sm {
+    @apply bg-slate-900/50 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 p-4 md:p-6 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/20 hover:border-indigo-500/30;
+  }
+
+  .card-gradient {
+    @apply bg-gradient-to-br from-slate-900/50 via-slate-900/40 to-slate-900/30 backdrop-blur-sm border border-slate-700/50;
+  }
+
+  /* 玻璃态效果 */
+  .glass {
+    @apply bg-slate-900/40 backdrop-blur-xl border border-slate-700/50 rounded-2xl;
+  }
+
+  /* 按钮设计 */
+  .btn {
+    @apply px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black cursor-pointer;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-r from-indigo-600 to-indigo-700 text-white hover:from-indigo-500 hover:to-indigo-600 hover:shadow-lg hover:shadow-indigo-500/40 focus:ring-indigo-500;
+  }
+
+  .btn-secondary {
+    @apply bg-slate-800 border border-slate-700 text-slate-100 hover:bg-slate-700 hover:border-slate-600 hover:shadow-md focus:ring-slate-600 font-medium;
+  }
+
+  .btn-danger {
+    @apply bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-500 hover:to-red-600 hover:shadow-lg hover:shadow-red-500/40 focus:ring-red-500;
+  }
+
+  .btn-outline {
+    @apply border-2 border-indigo-500 text-indigo-400 hover:bg-indigo-500/10 hover:shadow-lg hover:shadow-indigo-500/20 font-medium;
+  }
+
+  .btn-sm {
+    @apply px-4 py-2 text-sm;
+  }
+
+  .btn-lg {
+    @apply px-8 py-4 text-lg;
+  }
+
+  /* 输入框设计 */
+  .input {
+    @apply w-full px-4 py-3 rounded-xl border-2 border-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 transition-all duration-200 bg-slate-900/50 text-slate-100 placeholder:text-slate-500;
+  }
+
+  /* 标签页设计 */
+  .tab-button {
+    @apply px-6 py-3 font-semibold transition-all duration-200 relative text-slate-400 hover:text-slate-100;
+  }
+
+  .tab-button.active {
+    @apply text-indigo-400;
+  }
+
+  .tab-button.active::after {
+    @apply absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-indigo-600 to-indigo-500 rounded-full;
+    content: "";
+  }
+
+  /* 徽章设计 */
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .badge-primary {
+    @apply bg-indigo-500/20 text-indigo-300 border border-indigo-500/30;
+  }
+
+  .badge-success {
+    @apply bg-emerald-500/20 text-emerald-300 border border-emerald-500/30;
+  }
+
+  .badge-warning {
+    @apply bg-amber-500/20 text-amber-300 border border-amber-500/30;
+  }
+
+  .badge-danger {
+    @apply bg-red-500/20 text-red-300 border border-red-500/30;
+  }
+
+  .badge-gray {
+    @apply bg-slate-700/50 text-slate-300 border border-slate-600/50;
+  }
+
+  /* 表单容器 */
+  .form-container {
+    @apply bg-slate-900/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-6 md:p-8;
+  }
+
+  .form-section {
+    @apply bg-slate-800/30 rounded-xl p-4 md:p-6;
+  }
+
+  /* 文本颜色 */
+  .text-primary {
+    @apply text-slate-100;
+  }
+
+  .text-secondary {
+    @apply text-slate-400;
+  }
+
+  .text-muted {
+    @apply text-slate-500;
+  }
+
+  /* 状态徽章 */
+  .status-completed {
+    @apply bg-emerald-500/20 text-emerald-300 border border-emerald-500/30;
+  }
+
+  .status-running {
+    @apply bg-blue-500/20 text-blue-300 border border-blue-500/30;
+  }
+
+  .status-pending {
+    @apply bg-amber-500/20 text-amber-300 border border-amber-500/30;
+  }
+
+  .status-failed {
+    @apply bg-red-500/20 text-red-300 border border-red-500/30;
   }
 }
 
 @layer utilities {
-  @keyframes slide-in {
+  /* 渐变文字 */
+  .text-gradient {
+    @apply bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-warm {
+    @apply bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent;
+  }
+
+  .text-gradient-cool {
+    @apply bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent;
+  }
+
+  /* 阴影效果 */
+  .shadow-glow {
+    @apply shadow-lg shadow-indigo-500/20;
+  }
+
+  .shadow-glow-lg {
+    @apply shadow-2xl shadow-indigo-500/30;
+  }
+
+  /* 动画关键帧 */
+  @keyframes fade-in {
     from {
-      transform: translateX(100%);
       opacity: 0;
+      transform: translateY(10px);
     }
     to {
-      transform: translateX(0);
       opacity: 1;
+      transform: translateY(0);
     }
   }
 
-  .animate-slide-in {
-    animation: slide-in 0.3s ease-out;
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes pulse-glow {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+    }
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  /* 动画类 */
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+
+  .animate-slide-in-right {
+    animation: slide-in-right 0.5s ease-out;
+  }
+
+  .animate-pulse-glow {
+    animation: pulse-glow 2s infinite;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  /* 间距优化 */
+  .space-section {
+    @apply space-y-8 md:space-y-12;
+  }
+
+  .space-component {
+    @apply space-y-4 md:space-y-6;
+  }
+
+  /* 容器设计 */
+  .container-wide {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .container-compact {
+    @apply max-w-5xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* 网格设计 */
+  .grid-auto-fit {
+    @apply grid gap-6 md:gap-8;
+  }
+
+  .grid-cards {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6;
+  }
+
+  .grid-cards-wide {
+    @apply grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6;
   }
 }

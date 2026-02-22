@@ -7,11 +7,15 @@ import { Loading } from "../components/common/Loading";
 import { Toast } from "../components/common/Toast";
 import { useToast } from "../hooks/useToast";
 import { useMatches, useRunMatch } from "../hooks/useMatches";
-import type { MatchStatus, RunMatchRequest } from "../types/match";
+import type { Match, MatchStatus, RunMatchRequest } from "../types/match";
 
 const Matches: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [filterStatus, setFilterStatus] = useState<MatchStatus | "all">("all");
+  const [cloneDefaults, setCloneDefaults] = useState<
+    Partial<RunMatchRequest> | undefined
+  >();
+  const [formTitle, setFormTitle] = useState("运行新比赛");
 
   const { toasts, removeToast, success, error } = useToast();
 
@@ -31,15 +35,28 @@ const Matches: React.FC = () => {
       await runMatchMutation.mutateAsync(data);
       success("比赛运行成功！");
       setIsFormOpen(false);
+      setCloneDefaults(undefined);
     } catch (err) {
       error("比赛运行失败，请重试");
       console.error("运行比赛失败:", err);
     }
   };
 
+  // 处理复制比赛配置编辑
+  const handleEditMatch = (match: Match) => {
+    const strategyIds = (match.participants ?? []).map((p) => p.strategy_id);
+    setCloneDefaults({
+      strategy_ids: strategyIds,
+      market_type: match.config?.market_type ?? "random",
+      duration_steps: match.config?.duration_steps ?? 100,
+      initial_capital: match.config?.initial_capital ?? 10000,
+    });
+    setFormTitle("复制比赛配置");
+    setIsFormOpen(true);
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Toast 通知 */}
+    <div className="space-y-5">
       {toasts.map((toast) => (
         <Toast
           key={toast.id}
@@ -49,135 +66,127 @@ const Matches: React.FC = () => {
         />
       ))}
 
-      {/* 头部 */}
+      {/* 头部：标题 + 按钮 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">比赛列表</h1>
-          <p className="text-gray-600 mt-2">
-            查看和管理策略对战，共 {matches.length} 场比赛
+          <h1 className="text-3xl font-bold text-gradient">比赛列表</h1>
+          <p className="text-slate-400 text-sm mt-1">
+            共{" "}
+            <span className="text-indigo-400 font-semibold">
+              {matches.length}
+            </span>{" "}
+            场比赛
           </p>
         </div>
-        <Button onClick={() => setIsFormOpen(true)} size="lg">
-          <Play className="h-5 w-5 mr-2" />
+        <Button onClick={() => setIsFormOpen(true)} className="btn-primary">
+          <Play className="h-4 w-4 mr-2" />
           运行新比赛
         </Button>
       </div>
 
-      {/* 过滤器 */}
-      <div className="flex items-center gap-3">
-        <Filter className="h-5 w-5 text-gray-400" />
-        <div className="flex gap-2 flex-wrap">
+      {/* 过滤 + 统计行 */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Filter className="h-4 w-4 text-indigo-400 flex-shrink-0" />
+        {[
+          { key: "all" as const, label: "全部", count: matches.length },
+          {
+            key: "completed" as const,
+            label: "已完成",
+            count: matches.filter((m) => m.status === "completed").length,
+          },
+          {
+            key: "running" as const,
+            label: "进行中",
+            count: matches.filter((m) => m.status === "running").length,
+          },
+          {
+            key: "pending" as const,
+            label: "等待中",
+            count: matches.filter((m) => m.status === "pending").length,
+          },
+        ].map(({ key, label, count }) => (
           <button
-            onClick={() => setFilterStatus("all")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filterStatus === "all"
-                ? "bg-primary-600 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            key={key}
+            onClick={() => setFilterStatus(key)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+              filterStatus === key
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/40"
+                : "bg-slate-800 text-slate-300 hover:bg-slate-700"
             }`}
           >
-            全部 ({matches.length})
+            {label} ({count})
           </button>
-          <button
-            onClick={() => setFilterStatus("completed")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filterStatus === "completed"
-                ? "bg-primary-600 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            已完成 ({matches.filter((m) => m.status === "completed").length})
-          </button>
-          <button
-            onClick={() => setFilterStatus("running")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filterStatus === "running"
-                ? "bg-primary-600 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            进行中 ({matches.filter((m) => m.status === "running").length})
-          </button>
-          <button
-            onClick={() => setFilterStatus("pending")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              filterStatus === "pending"
-                ? "bg-primary-600 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            }`}
-          >
-            等待中 ({matches.filter((m) => m.status === "pending").length})
-          </button>
-        </div>
-      </div>
-
-      {/* 统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <div className="text-sm text-gray-500 mb-1">总比赛数</div>
-          <div className="text-2xl font-bold text-gray-900">
-            {matches.length}
+        ))}
+        <div className="flex gap-3 ml-auto">
+          <div className="text-center px-3 py-1.5 bg-slate-800/60 rounded-xl">
+            <div className="text-xs text-slate-400">已完成</div>
+            <div className="text-sm font-bold text-emerald-400">
+              {matches.filter((m) => m.status === "completed").length}
+            </div>
           </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <div className="text-sm text-gray-500 mb-1">已完成</div>
-          <div className="text-2xl font-bold text-green-600">
-            {matches.filter((m) => m.status === "completed").length}
+          <div className="text-center px-3 py-1.5 bg-slate-800/60 rounded-xl">
+            <div className="text-xs text-slate-400">进行中</div>
+            <div className="text-sm font-bold text-blue-400">
+              {matches.filter((m) => m.status === "running").length}
+            </div>
           </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <div className="text-sm text-gray-500 mb-1">进行中</div>
-          <div className="text-2xl font-bold text-blue-600">
-            {matches.filter((m) => m.status === "running").length}
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
-          <div className="text-sm text-gray-500 mb-1">平均参赛策略</div>
-          <div className="text-2xl font-bold text-primary-600">
-            {matches.length > 0
-              ? (
-                  matches.reduce((sum, m) => sum + (m.participants?.length ?? 0), 0) /
-                  matches.length
-                ).toFixed(1)
-              : 0}
+          <div className="text-center px-3 py-1.5 bg-slate-800/60 rounded-xl">
+            <div className="text-xs text-slate-400">平均参赛</div>
+            <div className="text-sm font-bold text-indigo-400">
+              {matches.length > 0
+                ? (
+                    matches.reduce(
+                      (sum, m) => sum + (m.participants?.length ?? 0),
+                      0,
+                    ) / matches.length
+                  ).toFixed(1)
+                : 0}
+            </div>
           </div>
         </div>
       </div>
 
-      {/* 比赛列表 */}
+      {/* 比赛卡片横向网格 */}
       {isLoading ? (
         <Loading />
       ) : filteredMatches.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
-            <Play className="h-8 w-8 text-gray-400" />
+        <div className="card text-center py-16">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800/50 mb-4">
+            <Play className="h-8 w-8 text-indigo-400" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">暂无比赛</h3>
-          <p className="text-gray-500 mb-4">
+          <h3 className="text-lg font-medium text-slate-100 mb-2">暂无比赛</h3>
+          <p className="text-slate-400 mb-4">
             {filterStatus === "all"
-              ? "点击上方按钮运行你的第一场比赛"
+              ? "点击右上角按钮运行你的第一场比赛"
               : `暂无${filterStatus === "completed" ? "已完成" : filterStatus === "running" ? "进行中" : "等待中"}的比赛`}
           </p>
           {filterStatus === "all" && (
-            <Button onClick={() => setIsFormOpen(true)}>
-              <Play className="h-5 w-5 mr-2" />
+            <Button onClick={() => setIsFormOpen(true)} className="btn-primary">
+              <Play className="h-4 w-4 mr-2" />
               运行新比赛
             </Button>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredMatches.map((match) => (
-            <MatchCard key={match.id} match={match} />
+            <MatchCard key={match.id} match={match} onEdit={handleEditMatch} />
           ))}
         </div>
       )}
 
-      {/* 运行比赛表单 */}
+      {/* 运行比赛表单弹窗 */}
       {isFormOpen && (
         <RunMatchForm
           onSubmit={handleRunMatch}
-          onCancel={() => setIsFormOpen(false)}
+          onCancel={() => {
+            setIsFormOpen(false);
+            setCloneDefaults(undefined);
+            setFormTitle("运行新比赛");
+          }}
           isLoading={runMatchMutation.isPending}
+          defaultValues={cloneDefaults}
+          title={formTitle}
         />
       )}
     </div>

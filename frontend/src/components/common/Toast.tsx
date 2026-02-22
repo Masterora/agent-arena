@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
-import { CheckCircle, XCircle, AlertCircle, X } from 'lucide-react';
+import React, { useEffect } from "react";
+import { CheckCircle, XCircle, AlertCircle, X } from "lucide-react";
 
 interface ToastProps {
-  type: 'success' | 'error' | 'warning';
+  type: "success" | "error" | "warning";
   message: string;
   onClose: () => void;
   duration?: number;
@@ -20,15 +20,15 @@ export const Toast: React.FC<ToastProps> = ({
   }, [duration, onClose]);
 
   const icons = {
-    success: <CheckCircle className="h-5 w-5 text-green-500" />,
-    error: <XCircle className="h-5 w-5 text-red-500" />,
-    warning: <AlertCircle className="h-5 w-5 text-yellow-500" />,
+    success: <CheckCircle className="h-5 w-5 text-emerald-400" />,
+    error: <XCircle className="h-5 w-5 text-red-400" />,
+    warning: <AlertCircle className="h-5 w-5 text-amber-400" />,
   };
 
   const colors = {
-    success: 'bg-green-50 border-green-200',
-    error: 'bg-red-50 border-red-200',
-    warning: 'bg-yellow-50 border-yellow-200',
+    success: "bg-emerald-500/20 border-emerald-500/50 text-emerald-100",
+    error: "bg-red-500/20 border-red-500/50 text-red-100",
+    warning: "bg-amber-500/20 border-amber-500/50 text-amber-100",
   };
 
   return (
@@ -36,10 +36,10 @@ export const Toast: React.FC<ToastProps> = ({
       className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg border ${colors[type]} shadow-lg animate-slide-in`}
     >
       {icons[type]}
-      <p className="text-sm font-medium text-gray-900">{message}</p>
+      <p className="text-sm font-medium">{message}</p>
       <button
         onClick={onClose}
-        className="ml-2 text-gray-400 hover:text-gray-600"
+        className="ml-2 text-slate-400 hover:text-slate-200"
       >
         <X className="h-4 w-4" />
       </button>

@@ -26,10 +26,10 @@ export const StrategyList: React.FC<StrategyListProps> = ({
 
   if (strategies.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+      <div className="card text-center py-12">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800/50 mb-4">
           <svg
-            className="h-8 w-8 text-gray-400"
+            className="h-8 w-8 text-indigo-400"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -42,8 +42,8 @@ export const StrategyList: React.FC<StrategyListProps> = ({
             />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">暂无策略</h3>
-        <p className="text-gray-500">点击上方按钮创建你的第一个策略</p>
+        <h3 className="text-lg font-medium text-slate-100 mb-2">暂无策略</h3>
+        <p className="text-slate-400">点击上方按钮创建你的第一个策略</p>
       </div>
     );
   }
