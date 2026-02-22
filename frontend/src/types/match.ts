@@ -1,5 +1,15 @@
 export type MatchStatus = "pending" | "running" | "completed" | "failed";
 export type MarketType = "random" | "trending" | "ranging";
+export type MarketSource =
+  | "simulated"
+  | "coingecko_historical"
+  | "coingecko_realtime";
+
+export interface CoinInfo {
+  id: string;
+  symbol: string;
+  name: string;
+}
 
 export interface MatchParticipant {
   strategy_id: string;
@@ -34,6 +44,8 @@ export interface Match {
 export interface RunMatchRequest {
   strategy_ids: string[];
   market_type: MarketType;
+  market_source: MarketSource;
+  coin_id: string;
   duration_steps: number;
   initial_capital: number;
 }

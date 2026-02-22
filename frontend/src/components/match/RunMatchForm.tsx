@@ -1,9 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Play } from "lucide-react";
 import { Button } from "../common/Button";
 import { StrategyList } from "../strategy/StrategyList";
 import { useStrategies } from "../../hooks/useStrategies";
-import type { RunMatchRequest, MarketType } from "../../types/match";
+import { marketApi } from "../../api/market";
+import type {
+  RunMatchRequest,
+  MarketType,
+  MarketSource,
+  CoinInfo,
+} from "../../types/match";
 
 interface RunMatchFormProps {
   onSubmit: (data: RunMatchRequest) => void;
@@ -21,14 +27,25 @@ export const RunMatchForm: React.FC<RunMatchFormProps> = ({
   title = "运行新比赛",
 }) => {
   const { data: strategies = [] } = useStrategies();
+  const [coins, setCoins] = useState<CoinInfo[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>(
     defaultValues?.strategy_ids ?? [],
   );
   const [config, setConfig] = useState({
     market_type: (defaultValues?.market_type ?? "random") as MarketType,
+    market_source: (defaultValues?.market_source ??
+      "simulated") as MarketSource,
+    coin_id: defaultValues?.coin_id ?? "ethereum",
     duration_steps: defaultValues?.duration_steps ?? 100,
     initial_capital: defaultValues?.initial_capital ?? 10000,
   });
+
+  useEffect(() => {
+    marketApi
+      .getSupportedCoins()
+      .then(setCoins)
+      .catch(() => setCoins([]));
+  }, []);
 
   const handleSelectStrategy = (strategyId: string) => {
     setSelectedIds((prev) =>
@@ -74,29 +91,94 @@ export const RunMatchForm: React.FC<RunMatchFormProps> = ({
           <div className="form-section space-y-4">
             <h3 className="text-lg font-semibold text-gradient">比赛配置</h3>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* 数据来源 */}
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  市场类型
+                  行情数据来源
                 </label>
                 <select
-                  value={config.market_type}
+                  value={config.market_source}
                   onChange={(e) =>
                     setConfig({
                       ...config,
-                      market_type: e.target.value as MarketType,
+                      market_source: e.target.value as MarketSource,
                     })
                   }
                   className="input"
                 >
-                  <option value="random">随机波动</option>
-                  <option value="trending">上涨趋势</option>
-                  <option value="ranging">震荡行情</option>
+                  <option value="simulated">模拟数据</option>
+                  <option value="coingecko_historical">
+                    CoinGecko 历史数据
+                  </option>
+                  <option value="coingecko_realtime">CoinGecko 实时数据</option>
                 </select>
                 <p className="text-xs text-slate-500 mt-1">
-                  选择模拟的市场环境
+                  {config.market_source === "simulated"
+                    ? "使用算法生成的模拟行情"
+                    : config.market_source === "coingecko_realtime"
+                      ? "基于最近 24h 真实 OHLC"
+                      : "使用过去 30 天真实 OHLC"}
                 </p>
               </div>
+
+              {/* 模拟市场类型（仅在模拟模式下显示） */}
+              {config.market_source === "simulated" ? (
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    市场类型
+                  </label>
+                  <select
+                    value={config.market_type}
+                    onChange={(e) =>
+                      setConfig({
+                        ...config,
+                        market_type: e.target.value as MarketType,
+                      })
+                    }
+                    className="input"
+                  >
+                    <option value="random">随机波动</option>
+                    <option value="trending">上涨趋势</option>
+                    <option value="ranging">震荡行情</option>
+                  </select>
+                  <p className="text-xs text-slate-500 mt-1">
+                    选择模拟的市场环境
+                  </p>
+                </div>
+              ) : (
+                /* 真实行情：币种选择 */
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    交易币种
+                  </label>
+                  <select
+                    value={config.coin_id}
+                    onChange={(e) =>
+                      setConfig({ ...config, coin_id: e.target.value })
+                    }
+                    className="input"
+                  >
+                    {coins.length > 0 ? (
+                      coins.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.symbol} — {c.name}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value="bitcoin">BTC — Bitcoin</option>
+                        <option value="ethereum">ETH — Ethereum</option>
+                        <option value="solana">SOL — Solana</option>
+                        <option value="binancecoin">BNB — BNB</option>
+                      </>
+                    )}
+                  </select>
+                  <p className="text-xs text-slate-500 mt-1">
+                    数据来源：CoinGecko 免费 API
+                  </p>
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">

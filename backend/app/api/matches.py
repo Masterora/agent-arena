@@ -9,7 +9,7 @@ from app.db.crud import MatchCRUD, StrategyCRUD
 from app.db import models
 from app.models.match import Match, MatchConfig, MatchStatus
 from app.core.match_engine import MatchEngine
-from app.core.market_data import MarketDataGenerator
+from app.core.market_data import MarketDataGenerator, CoinGeckoFetcher
 
 router = APIRouter()
 
@@ -18,6 +18,8 @@ class RunMatchRequest(BaseModel):
     """运行比赛请求"""
     strategy_ids: List[str] = Field(..., min_length=2, max_length=10)
     market_type: str = Field(default="random", pattern="^(random|trending|ranging)$")
+    market_source: str = Field(default="simulated", pattern="^(simulated|coingecko_historical|coingecko_realtime)$")
+    coin_id: str = Field(default="ethereum")
     duration_steps: int = Field(default=100, ge=10, le=500)
     initial_capital: float = Field(default=10000.0, ge=1000, le=1000000)
 
@@ -40,12 +42,19 @@ async def run_match(
         raise HTTPException(status_code=400, detail="至少需要 2 个策略")
 
     # 创建比赛记录
+    trading_pair = (
+        CoinGeckoFetcher.coin_symbol(request.coin_id)
+        if request.market_source != "simulated"
+        else "ETH/USDC"
+    )
     config = {
         "initial_capital": request.initial_capital,
-        "trading_pair": "ETH/USDC",
+        "trading_pair": trading_pair,
         "timeframe": "5m",
         "duration_steps": request.duration_steps,
-        "market_type": request.market_type
+        "market_type": request.market_type,
+        "market_source": request.market_source,
+        "coin_id": request.coin_id if request.market_source != "simulated" else None,
     }
 
     db_match = MatchCRUD.create(
@@ -60,9 +69,24 @@ async def run_match(
         db_match.status = "running"
 
         # 生成市场数据
-        logger.info(f"生成市场数据: {request.market_type}, {request.duration_steps} 步")
+        logger.info(
+            f"生成市场数据: source={request.market_source}, "
+            f"type={request.market_type}, coin={request.coin_id}, "
+            f"steps={request.duration_steps}"
+        )
 
-        if request.market_type == "trending":
+        if request.market_source == "coingecko_historical":
+            market_data = await CoinGeckoFetcher.fetch_historical(
+                coin_id=request.coin_id,
+                days=30,
+                steps=request.duration_steps,
+            )
+        elif request.market_source == "coingecko_realtime":
+            market_data = await CoinGeckoFetcher.fetch_realtime(
+                coin_id=request.coin_id,
+                steps=request.duration_steps,
+            )
+        elif request.market_type == "trending":
             market_data = MarketDataGenerator.generate_trending(steps=request.duration_steps)
         elif request.market_type == "ranging":
             market_data = MarketDataGenerator.generate_ranging(steps=request.duration_steps)
@@ -72,7 +96,7 @@ async def run_match(
         # 创建比赛配置对象
         match_config = MatchConfig(
             initial_capital=request.initial_capital,
-            trading_pair="ETH/USDC",
+            trading_pair=trading_pair,
             timeframe="5m",
             duration_steps=request.duration_steps
         )

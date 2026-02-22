@@ -5,7 +5,7 @@ import sys
 from pathlib import Path
 
 from app.config import settings
-from app.api import strategies, matches
+from app.api import strategies, matches, market
 
 # 配置日志
 logger.remove()
@@ -42,6 +42,7 @@ app.add_middleware(
 # 注册路由
 app.include_router(strategies.router, prefix="/api/strategies", tags=["strategies"])
 app.include_router(matches.router, prefix="/api/matches", tags=["matches"])
+app.include_router(market.router, prefix="/api/market", tags=["market"])
 
 @app.on_event("startup")
 async def startup():
