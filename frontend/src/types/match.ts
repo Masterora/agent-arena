@@ -27,6 +27,25 @@ export interface MatchConfig {
   timeframe: string;
   duration_steps: number;
   market_type?: MarketType;
+  market_source?: MarketSource;
+  coin_id?: string;
+}
+
+export interface ExecutionEntry {
+  step: number;
+  strategy_id: string;
+  action: { type: string; asset?: string; amount?: number };
+  portfolio: {
+    cash: number;
+    positions: Record<string, number>;
+    total_value: number;
+  };
+  price: number;
+}
+
+export interface MatchLogEntry {
+  step: number;
+  data: { logs: ExecutionEntry[] };
 }
 
 export interface Match {
@@ -38,7 +57,7 @@ export interface Match {
   end_time?: string;
   participants: MatchParticipant[];
   participants_count?: number;
-  logs?: string[];
+  logs?: MatchLogEntry[];
 }
 
 export interface RunMatchRequest {

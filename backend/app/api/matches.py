@@ -181,34 +181,6 @@ async def run_match(
         raise HTTPException(status_code=500, detail=f"比赛执行失败: {str(e)}")
 
 
-@router.get("/")
-async def list_matches(
-        skip: int = 0,
-        limit: int = 100,
-        status: Optional[str] = None,
-        db: Session = Depends(get_db)
-):
-    """获取比赛列表"""
-    db_matches = MatchCRUD.get_all(db, skip=skip, limit=limit, status=status)
-
-    return [
-        {
-            "id": m.id,
-            "status": m.status,
-            "initial_capital": m.initial_capital,
-            "trading_pair": m.trading_pair,
-            "timeframe": m.timeframe,
-            "duration_steps": m.duration_steps,
-            "market_type": m.market_type,
-            "created_at": m.created_at,
-            "start_time": m.start_time,
-            "end_time": m.end_time,
-            "participants_count": len(m.participants)
-        }
-        for m in db_matches
-    ]
-
-
 @router.get("/{match_id}")
 async def get_match(
         match_id: str,

@@ -149,7 +149,7 @@ const Home: React.FC = () => {
 
       {/* 图表 */}
       {(strategies.length > 0 || matches.length > 0) && (
-        <DashboardCharts strategiesCount={strategies.length} />
+        <DashboardCharts matches={matches} strategies={strategies} />
       )}
     </div>
   );

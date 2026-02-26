@@ -10,6 +10,7 @@ import {
   Cell,
 } from "recharts";
 import type { Strategy } from "../../types/strategy";
+import styles from "./StrategyStatsChart.module.css";
 
 interface StrategyStatsChartProps {
   strategies: Strategy[];
@@ -41,8 +42,8 @@ export const StrategyStatsChart: React.FC<StrategyStatsChartProps> = ({
   };
 
   return (
-    <div className="card">
-      <h3 className="text-lg font-semibold text-gradient mb-4">
+    <div className={`card ${styles.container}`}>
+      <h3 className={`text-lg font-semibold text-gradient mb-4 ${styles.title}`}>
         策略性能排行 (Top 10)
       </h3>
       <ResponsiveContainer width="100%" height={400}>

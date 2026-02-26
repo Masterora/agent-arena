@@ -1,0 +1,77 @@
+﻿@reference "../../index.css";
+.wrapper {
+  @apply relative h-full;
+}
+.inner {
+  @apply bg-black border border-slate-800 rounded-2xl
+         h-full flex flex-col
+         transform transition-all duration-300
+         group-hover:-translate-y-2
+         shadow-lg shadow-indigo-500/20
+         group-hover:shadow-2xl group-hover:shadow-indigo-500/30
+         p-6 md:p-8 hover:border-slate-600;
+}
+.header {
+  @apply flex items-start justify-between mb-4;
+}
+.titleRow {
+  @apply flex items-center gap-2 mb-2 flex-wrap;
+}
+.title {
+  @apply text-lg font-semibold text-slate-100;
+}
+.meta {
+  @apply flex items-center gap-4 text-sm text-slate-400;
+}
+.metaItem {
+  @apply flex items-center gap-1;
+}
+.config {
+  @apply grid grid-cols-2 gap-3 text-sm mb-4;
+}
+.configLabel {
+  @apply text-slate-500;
+}
+.configValue {
+  @apply font-medium text-slate-100 capitalize;
+}
+.footer {
+  @apply pt-4 border-t border-slate-700/50;
+}
+.footerRow {
+  @apply flex items-center justify-between mb-2 flex-wrap;
+}
+.footerMeta {
+  @apply flex items-center gap-2 text-sm text-slate-400;
+}
+.winner {
+  @apply flex items-center gap-1 text-sm font-medium text-emerald-400;
+}
+.rankings {
+  @apply space-y-2;
+}
+.rankRow {
+  @apply flex items-center justify-between text-sm;
+}
+.rankLeft {
+  @apply flex items-center gap-2;
+}
+.rankNum {
+  @apply text-slate-500;
+}
+.rankName {
+  @apply font-medium text-slate-100;
+}
+.returnPositive {
+  @apply font-medium text-emerald-400;
+}
+.returnNegative {
+  @apply font-medium text-red-400;
+}
+.editBtn {
+  @apply absolute top-3 right-3 z-10
+         p-2 rounded-lg border
+         text-slate-400 hover:text-indigo-400 transition-colors
+         bg-slate-900/80 backdrop-blur-sm border-slate-700/50
+         opacity-0 group-hover:opacity-100;
+}

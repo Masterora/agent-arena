@@ -10,6 +10,7 @@ import {
   Cell,
 } from "recharts";
 import type { MatchParticipant } from "../../types/match";
+import styles from "./Chart.module.css";
 
 interface ComparisonChartProps {
   participants: MatchParticipant[];
@@ -35,8 +36,8 @@ export const ComparisonChart: React.FC<ComparisonChartProps> = ({
   };
 
   return (
-    <div className="card">
-      <h3 className="text-lg font-semibold text-gradient mb-4">策略收益对比</h3>
+    <div className={`card ${styles.container}`}>
+      <h3 className={`text-lg font-semibold text-gradient mb-4 ${styles.title}`}>策略收益对比</h3>
       <ResponsiveContainer width="100%" height={300}>
         <BarChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" />

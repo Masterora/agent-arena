@@ -8,6 +8,7 @@ import {
   Legend,
 } from "recharts";
 import type { MatchParticipant } from "../../types/match";
+import styles from "./Chart.module.css";
 
 interface TradeDistributionChartProps {
   participants: MatchParticipant[];
@@ -24,8 +25,8 @@ export const TradeDistributionChart: React.FC<TradeDistributionChartProps> = ({
   }));
 
   return (
-    <div className="card">
-      <h3 className="text-lg font-semibold text-gradient mb-4">交易次数分布</h3>
+    <div className={`card ${styles.container}`}>
+      <h3 className={`text-lg font-semibold text-gradient mb-4 ${styles.title}`}>交易次数分布</h3>
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
           <Pie

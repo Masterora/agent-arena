@@ -9,59 +9,84 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import type { MatchParticipant } from "../../types/match";
+import type { MatchParticipant, MatchLogEntry } from "../../types/match";
+import styles from "./Chart.module.css";
 
 interface PerformanceChartProps {
   participants: MatchParticipant[];
   steps: number;
+  initialCapital: number;
+  logs?: MatchLogEntry[];
 }
 
-// 生成模拟的收益曲线数据
-const generatePerformanceData = (
+/** 从执行日志构建收益率曲线（真实数据） */
+const buildFromLogs = (
+  participants: MatchParticipant[],
+  initialCapital: number,
+  logs: MatchLogEntry[],
+): Record<string, number | string>[] => {
+  // 展平所有 log entries，按 step+strategy 建索引
+  const valueMap: Record<number, Record<string, number>> = {};
+  logs.forEach((logEntry) => {
+    logEntry.data.logs.forEach((e) => {
+      if (!valueMap[e.step]) valueMap[e.step] = {};
+      const name = participants.find((p) => p.strategy_id === e.strategy_id)?.strategy_name || e.strategy_id;
+      valueMap[e.step][name] = ((e.portfolio.total_value - initialCapital) / initialCapital) * 100;
+    });
+  });
+
+  // 加入起始点
+  const names = participants.map((p) => p.strategy_name || p.strategy_id);
+  const result: Record<string, number | string>[] = [{ step: 0, ...Object.fromEntries(names.map((n) => [n, 0])) }];
+  Object.keys(valueMap)
+    .map(Number)
+    .sort((a, b) => a - b)
+    .forEach((step) => {
+      result.push({ step, ...valueMap[step] });
+    });
+  return result;
+};
+
+/** 无日志时仅显示起始和结束两个点 */
+const buildFallback = (
   participants: MatchParticipant[],
   steps: number,
-) => {
-  const data: Record<string, number | string>[] = [];
-
-  for (let step = 0; step <= steps; step++) {
-    const point: Record<string, number | string> = { step };
-
-    participants.forEach((participant) => {
-      const finalReturn = participant.return_pct || 0;
-      // 模拟收益曲线（简单线性 + 随机波动）
-      const progress = step / steps;
-      const randomFactor = Math.sin(step * 0.1) * 2; // 添加波动
-      const value = progress * finalReturn + randomFactor;
-
-      point[participant.strategy_name || participant.strategy_id] = value;
-    });
-
-    data.push(point);
-  }
-
-  return data;
+): Record<string, number | string>[] => {
+  const start: Record<string, number | string> = { step: 0 };
+  const end: Record<string, number | string> = { step: steps };
+  participants.forEach((p) => {
+    const name = p.strategy_name || p.strategy_id;
+    start[name] = 0;
+    end[name] = p.return_pct ?? 0;
+  });
+  return [start, end];
 };
 
 const COLORS = [
-  "#3b82f6", // blue
-  "#10b981", // green
-  "#f59e0b", // amber
-  "#ef4444", // red
-  "#8b5cf6", // purple
-  "#ec4899", // pink
-  "#06b6d4", // cyan
-  "#f97316", // orange
+  "#3b82f6",
+  "#10b981",
+  "#f59e0b",
+  "#ef4444",
+  "#8b5cf6",
+  "#ec4899",
+  "#06b6d4",
+  "#f97316",
 ];
 
 export const PerformanceChart: React.FC<PerformanceChartProps> = ({
   participants,
   steps,
+  initialCapital,
+  logs,
 }) => {
-  const data = generatePerformanceData(participants, steps);
+  const data =
+    logs && logs.length > 0
+      ? buildFromLogs(participants, initialCapital, logs)
+      : buildFallback(participants, steps);
 
   return (
-    <div className="card">
-      <h3 className="text-lg font-semibold text-gradient mb-4">收益曲线对比</h3>
+    <div className={`card ${styles.container}`}>
+      <h3 className={`text-lg font-semibold text-gradient mb-4 ${styles.title}`}>收益曲线对比</h3>
       <ResponsiveContainer width="100%" height={400}>
         <LineChart data={data}>
           <CartesianGrid strokeDasharray="3 3" stroke="#334155" />

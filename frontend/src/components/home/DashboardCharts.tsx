@@ -10,46 +10,80 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import type { Match } from "../../types/match";
+import type { Strategy } from "../../types/strategy";
+import styles from "./DashboardCharts.module.css";
+
+const TYPE_LABELS: Record<string, string> = {
+  mean_reversion: "均值回归",
+  momentum: "动量追踪",
+  dca: "定投策略",
+  custom: "自定义",
+};
 
 interface DashboardChartsProps {
-  strategiesCount: number;
+  matches: Match[];
+  strategies: Strategy[];
 }
 
 export const DashboardCharts: React.FC<DashboardChartsProps> = ({
-  strategiesCount,
+  matches,
+  strategies,
 }) => {
-  // 生成稳定的模拟数据（基于当前日期的哈希值）
+  // 最近 7 天每天的比赛数和策略创建数（真实数据）
   const recentActivity = useMemo(() => {
-    const data = [];
-    const seed = new Date().toDateString(); // 每天种子相同
-    const seedHash = seed.split("").reduce((a, b) => a + b.charCodeAt(0), 0);
-
-    for (let i = 0; i < 7; i++) {
-      // 使用确定性的伪随机数生成
-      const pseudo1 = Math.sin(seedHash + i * 7123.456) * 10000;
-      const pseudo2 = Math.sin(seedHash + i * 3456.789) * 5000;
-
-      data.push({
-        day: `${i + 1}天前`,
-        matches: Math.floor(Math.abs(pseudo1) % 10) + 1,
-        strategies: Math.floor(Math.abs(pseudo2) % 5) + 1,
+    const days: { day: string; matches: number; strategies: number }[] = [];
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const dateStr = d.toLocaleDateString("zh-CN", {
+        month: "numeric",
+        day: "numeric",
+      });
+      const dayStart = new Date(
+        d.getFullYear(),
+        d.getMonth(),
+        d.getDate(),
+      ).getTime();
+      const dayEnd = dayStart + 86400000;
+      days.push({
+        day: dateStr,
+        matches: matches.filter((m) => {
+          const t = new Date(m.created_at).getTime();
+          return t >= dayStart && t < dayEnd;
+        }).length,
+        strategies: strategies.filter((s) => {
+          const t = new Date(s.created_at).getTime();
+          return t >= dayStart && t < dayEnd;
+        }).length,
       });
     }
-    return data.reverse();
-  }, []);
+    return days;
+  }, [matches, strategies]);
+
+  // 策略类型分布（真实数据）
+  const typeDistribution = useMemo(() => {
+    const counts: Record<string, number> = {};
+    strategies.forEach((s) => {
+      const label = TYPE_LABELS[s.type] ?? s.type;
+      counts[label] = (counts[label] ?? 0) + 1;
+    });
+    return Object.entries(counts).map(([type, count]) => ({ type, count }));
+  }, [strategies]);
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className={styles.grid}>
       {/* 最近活动 */}
-      <div className="card">
-        <h3 className="text-lg font-semibold text-gradient mb-4">
+      <div className={`card ${styles.chartCard}`}>
+        <h3 className={`text-lg font-semibold text-gradient mb-4 ${styles.chartTitle}`}>
           最近活动趋势
         </h3>
         <ResponsiveContainer width="100%" height={250}>
           <LineChart data={recentActivity}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis dataKey="day" stroke="#94a3b8" />
-            <YAxis stroke="#94a3b8" />
+            <YAxis stroke="#94a3b8" allowDecimals={false} />
             <Tooltip
               contentStyle={{
                 backgroundColor: "#1e293b",
@@ -79,22 +113,15 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
       </div>
 
       {/* 策略类型分布 */}
-      <div className="card">
-        <h3 className="text-lg font-semibold text-gradient mb-4">
+      <div className={`card ${styles.chartCard}`}>
+        <h3 className={`text-lg font-semibold text-gradient mb-4 ${styles.chartTitle}`}>
           策略类型分布
         </h3>
         <ResponsiveContainer width="100%" height={250}>
-          <BarChart
-            data={[
-              { type: "均值回归", count: Math.floor(strategiesCount * 0.4) },
-              { type: "动量追踪", count: Math.floor(strategiesCount * 0.3) },
-              { type: "定投策略", count: Math.floor(strategiesCount * 0.2) },
-              { type: "自定义", count: Math.floor(strategiesCount * 0.1) },
-            ]}
-          >
+          <BarChart data={typeDistribution}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis dataKey="type" stroke="#94a3b8" />
-            <YAxis stroke="#94a3b8" />
+            <YAxis stroke="#94a3b8" allowDecimals={false} />
             <Tooltip
               contentStyle={{
                 backgroundColor: "#1e293b",

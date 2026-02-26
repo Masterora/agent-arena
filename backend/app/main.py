@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from loguru import logger
@@ -21,19 +22,28 @@ logger.add(
     compression="zip"
 )
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("🚀 Agent Arena 服务启动成功")
+    logger.info(f"📝 API 文档: http://{settings.host}:{settings.port}/docs")
+    yield
+    logger.info("👋 服务关闭")
+
+
 # 创建应用
 app = FastAPI(
     title="Agent Arena API",
     description="AI 策略竞技场后端服务",
     version="0.1.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan,
 )
 
 # CORS 配置
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -43,15 +53,6 @@ app.add_middleware(
 app.include_router(strategies.router, prefix="/api/strategies", tags=["strategies"])
 app.include_router(matches.router, prefix="/api/matches", tags=["matches"])
 app.include_router(market.router, prefix="/api/market", tags=["market"])
-
-@app.on_event("startup")
-async def startup():
-    logger.info("🚀 Agent Arena 服务启动成功")
-    logger.info(f"📝 API 文档: http://{settings.host}:{settings.port}/docs")
-
-@app.on_event("shutdown")
-async def shutdown():
-    logger.info("👋 服务关闭")
 
 @app.get("/")
 async def root():

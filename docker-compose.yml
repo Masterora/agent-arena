@@ -62,7 +62,7 @@ services:
       - LOG_LEVEL=INFO
       - DB_ECHO=false
     ports:
-      - "8000:8000"
+      - "9000:9000"
     volumes:
       # 代码热重载（开发环境）
       - ./backend/app:/app/app:ro
@@ -78,7 +78,7 @@ services:
     networks:
       - agent-arena-network
     restart: unless-stopped
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 9000 --reload
 
   # pgAdmin (数据库管理工具)
   pgadmin:

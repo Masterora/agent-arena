@@ -1,7 +1,8 @@
-import React from "react";
+﻿import React from "react";
 import type { Match } from "../../types/match";
 import { Clock, TrendingUp, Users, Calendar, Edit } from "lucide-react";
 import { Link } from "react-router-dom";
+import styles from "./MatchCard.module.css";
 
 interface MatchCardProps {
   match: Match;
@@ -28,32 +29,26 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, onEdit }) => {
     .sort((a, b) => (b.return_pct || 0) - (a.return_pct || 0))[0];
 
   return (
-    <div className="relative h-full group">
+    <div className={`${styles.wrapper} group`}>
       <Link to={`/matches/${match.id}`} className="block h-full">
-        <div className="card card-gradient h-full flex flex-col transform group-hover:-translate-y-2 shadow-glow group-hover:shadow-glow-lg">
+        <div className={styles.inner}>
           {/* 头部 */}
-          <div className="flex items-start justify-between mb-4">
+          <div className={styles.header}>
             <div className="flex-1 pr-8">
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                <h3 className="text-lg font-semibold text-slate-100">
+              <div className={styles.titleRow}>
+                <h3 className={styles.title}>
                   {match.config?.trading_pair || "未知"} 比赛
                 </h3>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium badge ${
-                    statusColors[match.status]
-                  }`}
-                >
+                <span className={`px-2 py-1 rounded-full text-xs font-medium badge ${statusColors[match.status]}`}>
                   {statusLabels[match.status]}
                 </span>
               </div>
-              <div className="flex items-center gap-4 text-sm text-slate-400">
-                <div className="flex items-center gap-1">
+              <div className={styles.meta}>
+                <div className={styles.metaItem}>
                   <Calendar className="h-4 w-4" />
-                  <span>
-                    {new Date(match.created_at).toLocaleDateString("zh-CN")}
-                  </span>
+                  <span>{new Date(match.created_at).toLocaleDateString("zh-CN")}</span>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className={styles.metaItem}>
                   <Clock className="h-4 w-4" />
                   <span>{match.config?.duration_steps || 0} 步</span>
                 </div>
@@ -62,78 +57,62 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, onEdit }) => {
           </div>
 
           {/* 配置信息 */}
-          <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+          <div className={styles.config}>
             <div>
-              <span className="text-slate-500">初始资金</span>
-              <p className="font-medium text-slate-100">
+              <span className={styles.configLabel}>初始资金</span>
+              <p className={styles.configValue}>
                 ${(match.config?.initial_capital || 0).toLocaleString()}
               </p>
             </div>
             <div>
-              <span className="text-slate-500">市场类型</span>
-              <p className="font-medium capitalize text-slate-100">
+              <span className={styles.configLabel}>市场类型</span>
+              <p className={styles.configValue}>
                 {match.config?.market_type || "random"}
               </p>
             </div>
           </div>
 
           {/* 参赛策略 */}
-          <div className="pt-4 border-t border-slate-700/50">
-            <div className="flex items-center justify-between mb-2 flex-wrap">
-              <div className="flex items-center gap-2 text-sm text-slate-400">
+          <div className={styles.footer}>
+            <div className={styles.footerRow}>
+              <div className={styles.footerMeta}>
                 <Users className="h-4 w-4" />
                 <span>{(match.participants ?? []).length} 个策略参赛</span>
               </div>
               {match.status === "completed" && topParticipant && (
-                <div className="flex items-center gap-1 text-sm">
-                  <TrendingUp className="h-4 w-4 text-emerald-400" />
-                  <span className="font-medium text-emerald-400">
-                    冠军: {topParticipant.strategy_name}
-                  </span>
+                <div className={styles.winner}>
+                  <TrendingUp className="h-4 w-4" />
+                  <span>冠军: {topParticipant.strategy_name}</span>
                 </div>
               )}
             </div>
 
             {/* 排名预览 */}
-            {match.status === "completed" &&
-              (match.participants ?? []).length > 0 && (
-                <div className="space-y-2">
-                  {(match.participants ?? [])
-                    .sort((a, b) => (a.rank || 999) - (b.rank || 999))
-                    .slice(0, 3)
-                    .map((participant) => (
-                      <div
-                        key={participant.strategy_id}
-                        className="flex items-center justify-between text-sm"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-slate-500">
-                            #{participant.rank}
-                          </span>
-                          <span className="font-medium text-slate-100">
-                            {participant.strategy_name}
-                          </span>
-                        </div>
-                        <span
-                          className={`font-medium ${
-                            (participant.return_pct || 0) >= 0
-                              ? "text-emerald-400"
-                              : "text-red-400"
-                          }`}
-                        >
-                          {(participant.return_pct || 0) >= 0 ? "+" : ""}
-                          {(participant.return_pct || 0).toFixed(2)}%
-                        </span>
+            {match.status === "completed" && (match.participants ?? []).length > 0 && (
+              <div className={styles.rankings}>
+                {(match.participants ?? [])
+                  .sort((a, b) => (a.rank || 999) - (b.rank || 999))
+                  .slice(0, 3)
+                  .map((participant) => (
+                    <div key={participant.strategy_id} className={styles.rankRow}>
+                      <div className={styles.rankLeft}>
+                        <span className={styles.rankNum}>#{participant.rank}</span>
+                        <span className={styles.rankName}>{participant.strategy_name}</span>
                       </div>
-                    ))}
-                </div>
-              )}
+                      <span className={(participant.return_pct || 0) >= 0 ? styles.returnPositive : styles.returnNegative}>
+                        {(participant.return_pct || 0) >= 0 ? "+" : ""}
+                        {(participant.return_pct || 0).toFixed(2)}%
+                      </span>
+                    </div>
+                  ))}
+              </div>
+            )}
           </div>
         </div>
       </Link>
       {onEdit && (
         <button
-          className="absolute top-3 right-3 z-10 p-2 text-slate-400 hover:text-indigo-400 transition-colors bg-slate-900/80 backdrop-blur-sm rounded-lg border border-slate-700/50 opacity-0 group-hover:opacity-100"
+          className={styles.editBtn}
           onClick={() => onEdit(match)}
           title="复制并编辑此比赛配置"
         >

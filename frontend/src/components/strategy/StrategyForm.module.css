@@ -1,0 +1,37 @@
+﻿@reference "../../index.css";
+.overlay {
+  @apply fixed inset-0 z-50
+         flex items-center justify-center
+         bg-black/70 backdrop-blur-sm p-4;
+}
+.modal {
+  @apply bg-black rounded-2xl border border-slate-800 p-6 md:p-8
+         max-w-2xl w-full max-h-[90vh] overflow-y-auto;
+}
+.modalHeader {
+  @apply flex items-center justify-between
+         pb-6 mb-6 border-b border-slate-700/50;
+}
+.modalTitle {
+  @apply text-2xl font-bold
+         bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent;
+}
+.closeBtn {
+  @apply p-2 rounded-lg transition-all duration-200
+         text-slate-400 hover:text-slate-200 hover:bg-slate-800/50;
+}
+.form {
+  @apply space-y-6;
+}
+.twoCol {
+  @apply grid grid-cols-2 gap-4;
+}
+.fieldHint {
+  @apply text-xs text-slate-500 mt-1;
+}
+.footerRow {
+  @apply flex gap-3 pt-4;
+}
+.submitBtn {
+  @apply flex-1;
+}

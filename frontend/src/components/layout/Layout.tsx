@@ -1,5 +1,6 @@
 import React from "react";
 import { Header } from "./Header";
+import styles from "./Layout.module.css";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -7,12 +8,10 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="flex flex-col min-h-screen bg-black">
+    <div className={styles.root}>
       <Header />
-      <main className="flex-1 w-full py-8 md:py-12 relative z-10">
-        <div className="container-wide">
-          <div className="animate-fade-in">{children}</div>
-        </div>
+      <main className={styles.main}>
+        <div className={styles.content}>{children}</div>
       </main>
     </div>
   );

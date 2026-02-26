@@ -1,0 +1,22 @@
+﻿@reference "../../index.css";
+.toast {
+  @apply fixed top-4 right-4 z-50
+         flex items-center gap-3
+         px-4 py-3 rounded-lg border shadow-xl;
+  animation: fade-in 0.5s ease-out;
+}
+.success {
+  @apply bg-emerald-500/20 border-emerald-500/50 text-emerald-100;
+}
+.error {
+  @apply bg-red-500/20 border-red-500/50 text-red-100;
+}
+.warning {
+  @apply bg-amber-500/20 border-amber-500/50 text-amber-100;
+}
+.message {
+  @apply text-sm font-medium;
+}
+.closeBtn {
+  @apply ml-2 text-slate-400 hover:text-slate-200 transition-colors;
+}

@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { CheckCircle, XCircle, AlertCircle, X } from "lucide-react";
+import styles from "./Toast.module.css";
 
 interface ToastProps {
   type: "success" | "error" | "warning";
@@ -25,22 +26,11 @@ export const Toast: React.FC<ToastProps> = ({
     warning: <AlertCircle className="h-5 w-5 text-amber-400" />,
   };
 
-  const colors = {
-    success: "bg-emerald-500/20 border-emerald-500/50 text-emerald-100",
-    error: "bg-red-500/20 border-red-500/50 text-red-100",
-    warning: "bg-amber-500/20 border-amber-500/50 text-amber-100",
-  };
-
   return (
-    <div
-      className={`fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg border ${colors[type]} shadow-lg animate-slide-in`}
-    >
+    <div className={`${styles.toast} ${styles[type]}`}>
       {icons[type]}
-      <p className="text-sm font-medium">{message}</p>
-      <button
-        onClick={onClose}
-        className="ml-2 text-slate-400 hover:text-slate-200"
-      >
+      <p className={styles.message}>{message}</p>
+      <button onClick={onClose} className={styles.closeBtn}>
         <X className="h-4 w-4" />
       </button>
     </div>

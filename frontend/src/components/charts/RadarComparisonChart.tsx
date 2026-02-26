@@ -10,6 +10,7 @@ import {
   Tooltip,
 } from "recharts";
 import type { MatchParticipant } from "../../types/match";
+import styles from "./Chart.module.css";
 
 interface RadarComparisonChartProps {
   participants: MatchParticipant[];
@@ -57,8 +58,15 @@ export const RadarComparisonChart: React.FC<RadarComparisonChartProps> = ({
           value = normalize(p.total_trades, maxTrades);
           break;
         case "stability":
-          // 模拟稳定性分数（实际应该从历史数据计算）
-          value = p.total_trades > 0 ? 70 + Math.random() * 30 : 0;
+          // 稳定性 = 胜率 * 0.6 + 交易频率得分 * 0.4（交易越多数据越可信）
+          value =
+            p.total_trades > 0
+              ? Math.min(
+                  100,
+                  (p.win_trades / p.total_trades) * 60 +
+                    (Math.min(p.total_trades, 50) / 50) * 40,
+                )
+              : 0;
           break;
       }
 
@@ -69,8 +77,8 @@ export const RadarComparisonChart: React.FC<RadarComparisonChartProps> = ({
   });
 
   return (
-    <div className="card">
-      <h3 className="text-lg font-semibold text-gradient mb-4">
+    <div className={`card ${styles.container}`}>
+      <h3 className={`text-lg font-semibold text-gradient mb-4 ${styles.title}`}>
         策略性能雷达图
       </h3>
       <ResponsiveContainer width="100%" height={400}>

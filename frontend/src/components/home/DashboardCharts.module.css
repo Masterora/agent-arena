@@ -1,0 +1,13 @@
+﻿@reference "../../index.css";
+.grid {
+  @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
+}
+.chartCard {
+  @apply bg-black rounded-2xl border border-slate-800 p-6 md:p-8
+         transition-all duration-300
+         hover:border-slate-600 hover:shadow-lg hover:shadow-black/50;
+}
+.chartTitle {
+  @apply text-lg font-semibold mb-4
+         bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent;
+}

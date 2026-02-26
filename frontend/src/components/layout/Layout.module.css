@@ -1,0 +1,11 @@
+﻿@reference "../../index.css";
+.root {
+  @apply flex flex-col min-h-screen bg-black;
+}
+.main {
+  @apply flex-1 w-full py-8 md:py-12 relative z-10;
+}
+.content {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  animation: fade-in 0.5s ease-out;
+}

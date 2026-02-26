@@ -18,7 +18,7 @@ import { PortfolioValueChart } from "../components/charts/PortfolioValueChart";
 
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: match, isLoading } = useMatch(id!, false);
+  const { data: match, isLoading } = useMatch(id!, true);
   const [activeTab, setActiveTab] = useState<"overview" | "charts">("overview");
 
   if (isLoading) {
@@ -319,6 +319,8 @@ const MatchDetail: React.FC = () => {
           <PerformanceChart
             participants={sortedParticipants}
             steps={match.config.duration_steps}
+            initialCapital={match.config.initial_capital}
+            logs={match.logs}
           />
 
           {/* 资金变化 */}
@@ -326,6 +328,7 @@ const MatchDetail: React.FC = () => {
             participants={sortedParticipants}
             initialCapital={match.config.initial_capital}
             steps={match.config.duration_steps}
+            logs={match.logs}
           />
 
           {/* 对比图表 */}
