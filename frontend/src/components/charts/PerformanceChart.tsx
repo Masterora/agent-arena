@@ -19,13 +19,24 @@ interface PerformanceChartProps {
   logs?: MatchLogEntry[];
 }
 
+const CHART_COLORS = ["#22d3ee", "#10b981", "#f59e0b", "#fb7185", "#a78bfa", "#fb923c"];
+
+const TOOLTIP_STYLE = {
+  background: "#0d1426",
+  border: "1px solid #1e293b",
+  borderRadius: "8px",
+  color: "#94a3b8",
+  fontSize: "12px",
+  boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
+  padding: "10px 14px",
+};
+
 /** 从执行日志构建收益率曲线（真实数据） */
 const buildFromLogs = (
   participants: MatchParticipant[],
   initialCapital: number,
   logs: MatchLogEntry[],
 ): Record<string, number | string>[] => {
-  // 展平所有 log entries，按 step+strategy 建索引
   const valueMap: Record<number, Record<string, number>> = {};
   logs.forEach((logEntry) => {
     logEntry.data.logs.forEach((e) => {
@@ -34,16 +45,11 @@ const buildFromLogs = (
       valueMap[e.step][name] = ((e.portfolio.total_value - initialCapital) / initialCapital) * 100;
     });
   });
-
-  // 加入起始点
   const names = participants.map((p) => p.strategy_name || p.strategy_id);
   const result: Record<string, number | string>[] = [{ step: 0, ...Object.fromEntries(names.map((n) => [n, 0])) }];
-  Object.keys(valueMap)
-    .map(Number)
-    .sort((a, b) => a - b)
-    .forEach((step) => {
-      result.push({ step, ...valueMap[step] });
-    });
+  Object.keys(valueMap).map(Number).sort((a, b) => a - b).forEach((step) => {
+    result.push({ step, ...valueMap[step] });
+  });
   return result;
 };
 
@@ -62,22 +68,8 @@ const buildFallback = (
   return [start, end];
 };
 
-const COLORS = [
-  "#3b82f6",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#ec4899",
-  "#06b6d4",
-  "#f97316",
-];
-
 export const PerformanceChart: React.FC<PerformanceChartProps> = ({
-  participants,
-  steps,
-  initialCapital,
-  logs,
+  participants, steps, initialCapital, logs,
 }) => {
   const data =
     logs && logs.length > 0
@@ -85,48 +77,47 @@ export const PerformanceChart: React.FC<PerformanceChartProps> = ({
       : buildFallback(participants, steps);
 
   return (
-    <div className={`card ${styles.container}`}>
-      <h3 className={`text-lg font-semibold text-gradient mb-4 ${styles.title}`}>收益曲线对比</h3>
-      <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+    <div className={styles.container}>
+      <p className={styles.title}>收益率对比</p>
+      <ResponsiveContainer width="100%" height={360}>
+        <LineChart data={data} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="1 4" stroke="rgba(148,163,184,0.07)" vertical={false} />
           <XAxis
             dataKey="step"
-            label={{ value: "时间步数", position: "insideBottom", offset: -5 }}
-            stroke="#94a3b8"
-            style={{ color: "#94a3b8" }}
+            tick={{ fill: "#475569", fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
           />
           <YAxis
-            label={{
-              value: "收益率 (%)",
-              angle: -90,
-              position: "insideLeft",
-              style: { color: "#94a3b8" },
-            }}
-            stroke="#94a3b8"
-            style={{ color: "#94a3b8" }}
+            tick={{ fill: "#475569", fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={(v) => `${v > 0 ? "+" : ""}${Number(v).toFixed(1)}%`}
+            width={52}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: "#1e293b",
-              border: "1px solid #475569",
-              borderRadius: "8px",
-              color: "#e2e8f0",
-            }}
-            formatter={(value: number | undefined) =>
-              `${(value ?? 0).toFixed(2)}%`
-            }
+            contentStyle={TOOLTIP_STYLE}
+            labelStyle={{ color: "#475569", marginBottom: "4px", fontSize: "11px" }}
+            wrapperStyle={{ outline: "none" }}
+            cursor={{ stroke: "rgba(34,211,238,0.12)", strokeWidth: 1 }}
+            formatter={(value: number | undefined) => [
+              `${(value ?? 0) > 0 ? "+" : ""}${(value ?? 0).toFixed(2)}%`,
+            ]}
           />
-          <Legend wrapperStyle={{ color: "#94a3b8" }} />
+          <Legend
+            wrapperStyle={{ color: "#64748b", fontSize: "12px", paddingTop: "12px" }}
+            iconType="plainline"
+            iconSize={16}
+          />
           {participants.map((participant, index) => (
             <Line
               key={participant.strategy_id}
               type="monotone"
               dataKey={participant.strategy_name || participant.strategy_id}
-              stroke={COLORS[index % COLORS.length]}
+              stroke={CHART_COLORS[index % CHART_COLORS.length]}
               strokeWidth={2}
               dot={false}
-              activeDot={{ r: 6 }}
+              activeDot={{ r: 4, strokeWidth: 0 }}
             />
           ))}
         </LineChart>

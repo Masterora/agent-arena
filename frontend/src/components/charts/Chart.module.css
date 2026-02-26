@@ -1,11 +1,22 @@
 ﻿@reference "../../index.css";
-/* Chart card wrapper - charts share the same card structure */
+
 .container {
-  @apply bg-black rounded-2xl border border-slate-800 p-6 md:p-8
-         transition-all duration-300
-         hover:border-slate-600 hover:shadow-lg hover:shadow-black/50;
+  background-color: #0c1120;
+  @apply rounded-xl border border-slate-800 p-5 md:p-6
+         transition-all duration-200 relative overflow-hidden;
 }
+
+/* top accent line */
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34,211,238,0.25), transparent);
+  pointer-events: none;
+}
+
 .title {
-  @apply text-lg font-semibold mb-4
-         bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent;
+  @apply text-xs font-semibold uppercase tracking-widest text-slate-500 mb-5;
+  letter-spacing: 0.1em;
 }

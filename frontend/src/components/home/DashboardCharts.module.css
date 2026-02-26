@@ -3,11 +3,19 @@
   @apply grid grid-cols-1 lg:grid-cols-2 gap-6;
 }
 .chartCard {
-  @apply bg-black rounded-2xl border border-slate-800 p-6 md:p-8
-         transition-all duration-300
-         hover:border-slate-600 hover:shadow-lg hover:shadow-black/50;
+  @apply bg-[#0c1120] rounded-xl border border-[#1e2035] p-6
+         transition-colors duration-200
+         hover:border-cyan-500/20;
+  position: relative;
+  overflow: hidden;
+}
+.chartCard::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34,211,238,0.2), transparent);
 }
 .chartTitle {
-  @apply text-lg font-semibold mb-4
-         bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent;
+  @apply text-xs font-semibold uppercase tracking-widest text-slate-500 mb-4;
 }

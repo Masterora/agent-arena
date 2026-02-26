@@ -1,10 +1,86 @@
 ﻿@reference "../../index.css";
+
 .container {
-  @apply bg-black rounded-2xl border border-slate-800 p-6 md:p-8
-         transition-all duration-300
-         hover:border-slate-600 hover:shadow-lg hover:shadow-black/50;
+  background-color: #0c1120;
+  @apply rounded-xl border border-[#1e2035] p-6
+         transition-colors duration-200
+         hover:border-cyan-500/20;
+  position: relative;
+  overflow: hidden;
 }
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34,211,238,0.2), transparent);
+}
+
 .title {
-  @apply text-lg font-semibold mb-4
-         bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent;
+  @apply text-xs font-semibold uppercase tracking-widest text-slate-500 mb-5;
+}
+
+/* ── 排行列表 ─────────────────────────────── */
+.list {
+  @apply flex flex-col gap-1;
+}
+
+.row {
+  @apply grid items-center gap-3 px-3 py-2.5 rounded-lg
+         transition-colors duration-150 hover:bg-white/[0.03];
+  grid-template-columns: 1.5rem 1fr 7rem 4.5rem 3rem;
+}
+
+.rank {
+  @apply text-xs font-bold tabular-nums text-center;
+}
+
+.rank_1 { @apply text-amber-400; }
+.rank_2 { @apply text-slate-300; }
+.rank_3 { @apply text-orange-500; }
+.rank_n { @apply text-slate-600; }
+
+.name {
+  @apply text-sm text-slate-200 truncate font-medium;
+}
+
+/* 收益率 — 数值 + 进度条 */
+.returnCol {
+  @apply flex flex-col gap-1;
+}
+
+.returnVal {
+  @apply text-xs font-semibold tabular-nums font-mono;
+}
+
+.returnPos { @apply text-emerald-400; }
+.returnNeg { @apply text-rose-400; }
+.returnZero { @apply text-slate-500; }
+
+.bar {
+  @apply h-0.5 rounded-full overflow-hidden;
+  background: rgba(148,163,184,0.1);
+}
+
+.barFill {
+  @apply h-full rounded-full;
+  transition: width 0.6s ease;
+}
+
+/* 胜率 */
+.winRate {
+  @apply text-xs tabular-nums text-slate-400 text-right font-mono;
+}
+
+/* 场次 */
+.matches {
+  @apply text-xs tabular-nums text-slate-600 text-right;
+}
+
+/* 表头 */
+.header {
+  @apply grid items-center gap-3 px-3 pb-2 mb-1
+         border-b border-slate-800/60 text-xs text-slate-600 uppercase tracking-widest;
+  grid-template-columns: 1.5rem 1fr 7rem 4.5rem 3rem;
 }

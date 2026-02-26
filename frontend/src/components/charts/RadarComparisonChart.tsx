@@ -16,103 +16,94 @@ interface RadarComparisonChartProps {
   participants: MatchParticipant[];
 }
 
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+const CHART_COLORS = ["#22d3ee", "#10b981", "#f59e0b", "#fb7185", "#a78bfa"];
+
+const TOOLTIP_STYLE = {
+  background: "#0d1426",
+  border: "1px solid #1e293b",
+  borderRadius: "8px",
+  color: "#94a3b8",
+  fontSize: "12px",
+  boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
+  padding: "10px 14px",
+};
 
 export const RadarComparisonChart: React.FC<RadarComparisonChartProps> = ({
   participants,
 }) => {
-  // 准备雷达图数据
   const metrics = [
     { name: "收益率", key: "return" },
-    { name: "胜率", key: "winRate" },
+    { name: "胜率",   key: "winRate" },
     { name: "交易频率", key: "tradeFreq" },
     { name: "稳定性", key: "stability" },
   ];
 
-  // 归一化数据到 0-100
-  const normalize = (value: number, max: number) => {
-    return Math.min((value / max) * 100, 100);
-  };
-
-  const maxReturn = Math.max(
-    ...participants.map((p) => Math.abs(p.return_pct || 0)),
-  );
-  const maxTrades = Math.max(...participants.map((p) => p.total_trades));
+  const maxReturn = Math.max(...participants.map((p) => Math.abs(p.return_pct || 0)), 1);
+  const maxTrades = Math.max(...participants.map((p) => p.total_trades), 1);
 
   const data = metrics.map((metric) => {
     const point: Record<string, string | number> = { metric: metric.name };
-
     participants.forEach((p) => {
       const strategyName = p.strategy_name || "未知策略";
       let value = 0;
-
       switch (metric.key) {
         case "return":
-          value = normalize(Math.abs(p.return_pct || 0), maxReturn);
+          value = Math.min((Math.abs(p.return_pct || 0) / maxReturn) * 100, 100);
           break;
         case "winRate":
-          value =
-            p.total_trades > 0 ? (p.win_trades / p.total_trades) * 100 : 0;
+          value = p.total_trades > 0 ? (p.win_trades / p.total_trades) * 100 : 0;
           break;
         case "tradeFreq":
-          value = normalize(p.total_trades, maxTrades);
+          value = Math.min((p.total_trades / maxTrades) * 100, 100);
           break;
         case "stability":
-          // 稳定性 = 胜率 * 0.6 + 交易频率得分 * 0.4（交易越多数据越可信）
-          value =
-            p.total_trades > 0
-              ? Math.min(
-                  100,
-                  (p.win_trades / p.total_trades) * 60 +
-                    (Math.min(p.total_trades, 50) / 50) * 40,
-                )
-              : 0;
+          value = p.total_trades > 0
+            ? Math.min(100, (p.win_trades / p.total_trades) * 60 + (Math.min(p.total_trades, 50) / 50) * 40)
+            : 0;
           break;
       }
-
       point[strategyName] = value;
     });
-
     return point;
   });
 
   return (
-    <div className={`card ${styles.container}`}>
-      <h3 className={`text-lg font-semibold text-gradient mb-4 ${styles.title}`}>
-        策略性能雷达图
-      </h3>
-      <ResponsiveContainer width="100%" height={400}>
-        <RadarChart data={data}>
-          <PolarGrid stroke="#334155" />
+    <div className={styles.container}>
+      <p className={styles.title}>策略性能雷达图</p>
+      <ResponsiveContainer width="100%" height={360}>
+        <RadarChart data={data} margin={{ top: 12, right: 24, left: 24, bottom: 12 }}>
+          <PolarGrid stroke="rgba(148,163,184,0.1)" />
           <PolarAngleAxis
             dataKey="metric"
-            stroke="#94a3b8"
-            style={{ color: "#94a3b8" }}
+            tick={{ fill: "#64748b", fontSize: 12 }}
           />
           <PolarRadiusAxis
             angle={90}
             domain={[0, 100]}
-            stroke="#94a3b8"
-            style={{ color: "#94a3b8" }}
+            tick={{ fill: "#334155", fontSize: 10 }}
+            axisLine={false}
+            tickLine={false}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: "#1e293b",
-              border: "1px solid #475569",
-              borderRadius: "8px",
-              color: "#e2e8f0",
-            }}
-            formatter={(value: number | undefined) => (value ?? 0).toFixed(1)}
+            contentStyle={TOOLTIP_STYLE}
+            labelStyle={{ color: "#475569", marginBottom: "4px", fontSize: "11px" }}
+            wrapperStyle={{ outline: "none" }}
+            formatter={(value: number | undefined) => [`${(value ?? 0).toFixed(1)}`]}
           />
-          <Legend wrapperStyle={{ color: "#94a3b8" }} />
+          <Legend
+            wrapperStyle={{ color: "#64748b", fontSize: "12px" }}
+            iconType="circle"
+            iconSize={8}
+          />
           {participants.slice(0, 5).map((p, index) => (
             <Radar
               key={p.strategy_id}
               name={p.strategy_name || "未知策略"}
               dataKey={p.strategy_name || "未知策略"}
-              stroke={COLORS[index % COLORS.length]}
-              fill={COLORS[index % COLORS.length]}
-              fillOpacity={0.3}
+              stroke={CHART_COLORS[index % CHART_COLORS.length]}
+              fill={CHART_COLORS[index % CHART_COLORS.length]}
+              fillOpacity={0.12}
+              strokeWidth={1.5}
             />
           ))}
         </RadarChart>

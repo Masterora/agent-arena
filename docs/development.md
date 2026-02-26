@@ -493,6 +493,21 @@ alembic downgrade -1
 
 > **SQLite 开发模式**：直接删除 `data/agent_arena.db`，重启服务会自动调用 `init_db()` 重建所有表。Alembic 迁移主要用于 PostgreSQL 生产环境的增量变更。
 
+> **⚠️ 已有 SQLite 数据库升级**：如果本地 `data/agent_arena.db` 是在新增列（如 `max_drawdown`、`sharpe_ratio`）**之前**创建的，直接运行会报 `500 OperationalError: table has no column`。  
+> 解决方式（二选一）：
+> 1. **删库重建**（最简单，会丢失测试数据）：`Remove-Item backend\data\agent_arena.db`，重启后端。  
+> 2. **手动补列**（保留数据）：
+>    ```bash
+>    cd backend
+>    # Windows venv
+>    .\venv\Scripts\python.exe -c "
+>    import sqlite3; con = sqlite3.connect('data/agent_arena.db')
+>    con.execute('ALTER TABLE match_participants ADD COLUMN max_drawdown REAL NOT NULL DEFAULT 0.0')
+>    con.execute('ALTER TABLE match_participants ADD COLUMN sharpe_ratio REAL NOT NULL DEFAULT 0.0')
+>    con.commit(); con.close(); print('done')
+>    "
+>    ```
+
 ---
 
 ## 7. 部署

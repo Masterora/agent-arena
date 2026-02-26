@@ -6,6 +6,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer,
 } from "recharts";
 import type { MatchParticipant, MatchLogEntry } from "../../types/match";
@@ -17,6 +18,18 @@ interface PortfolioValueChartProps {
   steps: number;
   logs?: MatchLogEntry[];
 }
+
+const CHART_COLORS = ["#22d3ee", "#10b981", "#f59e0b", "#fb7185", "#a78bfa", "#fb923c"];
+
+const TOOLTIP_STYLE = {
+  background: "#0d1426",
+  border: "1px solid #1e293b",
+  borderRadius: "8px",
+  color: "#94a3b8",
+  fontSize: "12px",
+  boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
+  padding: "10px 14px",
+};
 
 /** 从执行日志构建资金变化曲线（真实数据） */
 const buildFromLogs = (
@@ -32,17 +45,13 @@ const buildFromLogs = (
       valueMap[e.step][name] = e.portfolio.total_value;
     });
   });
-
   const names = participants.map((p) => p.strategy_name || p.strategy_id);
   const result: Record<string, number | string>[] = [
     { step: 0, ...Object.fromEntries(names.map((n) => [n, initialCapital])) },
   ];
-  Object.keys(valueMap)
-    .map(Number)
-    .sort((a, b) => a - b)
-    .forEach((step) => {
-      result.push({ step, ...valueMap[step] });
-    });
+  Object.keys(valueMap).map(Number).sort((a, b) => a - b).forEach((step) => {
+    result.push({ step, ...valueMap[step] });
+  });
   return result;
 };
 
@@ -62,20 +71,8 @@ const buildFallback = (
   return [start, end];
 };
 
-const COLORS = [
-  "#3b82f6",
-  "#10b981",
-  "#f59e0b",
-  "#ef4444",
-  "#8b5cf6",
-  "#ec4899",
-];
-
 export const PortfolioValueChart: React.FC<PortfolioValueChartProps> = ({
-  participants,
-  initialCapital,
-  steps,
-  logs,
+  participants, initialCapital, steps, logs,
 }) => {
   const data =
     logs && logs.length > 0
@@ -83,69 +80,56 @@ export const PortfolioValueChart: React.FC<PortfolioValueChartProps> = ({
       : buildFallback(participants, initialCapital, steps);
 
   return (
-    <div className={`card ${styles.container}`}>
-      <h3 className={`text-lg font-semibold text-gradient mb-4 ${styles.title}`}>资金变化趋势</h3>
-      <ResponsiveContainer width="100%" height={400}>
-        <AreaChart data={data}>
+    <div className={styles.container}>
+      <p className={styles.title}>资金变化趋势</p>
+      <ResponsiveContainer width="100%" height={360}>
+        <AreaChart data={data} margin={{ top: 4, right: 8, left: -8, bottom: 0 }}>
           <defs>
             {participants.map((p, index) => (
-              <linearGradient
-                key={p.strategy_id}
-                id={`color${index}`}
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
-              >
-                <stop
-                  offset="5%"
-                  stopColor={COLORS[index % COLORS.length]}
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor={COLORS[index % COLORS.length]}
-                  stopOpacity={0.1}
-                />
+              <linearGradient key={p.strategy_id} id={`pv-grad${index}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stopColor={CHART_COLORS[index % CHART_COLORS.length]} stopOpacity={0.18} />
+                <stop offset="100%" stopColor={CHART_COLORS[index % CHART_COLORS.length]} stopOpacity={0} />
               </linearGradient>
             ))}
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+          <CartesianGrid strokeDasharray="1 4" stroke="rgba(148,163,184,0.07)" vertical={false} />
           <XAxis
             dataKey="step"
-            label={{ value: "时间步数", position: "insideBottom", offset: -5 }}
-            stroke="#94a3b8"
-            style={{ color: "#94a3b8" }}
+            tick={{ fill: "#475569", fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
           />
           <YAxis
-            label={{
-              value: "资金 ($)",
-              angle: -90,
-              position: "insideLeft",
-              style: { color: "#94a3b8" },
-            }}
-            stroke="#94a3b8"
-            style={{ color: "#94a3b8" }}
+            tick={{ fill: "#475569", fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={(v) => `$${(Number(v) / 1000).toFixed(1)}k`}
+            width={48}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: "#1e293b",
-              border: "1px solid #475569",
-              borderRadius: "8px",
-              color: "#e2e8f0",
-            }}
-            formatter={(value: number | undefined) =>
-              `$${(value ?? 0).toFixed(2)}`
-            }
+            contentStyle={TOOLTIP_STYLE}
+            labelStyle={{ color: "#475569", marginBottom: "4px", fontSize: "11px" }}
+            wrapperStyle={{ outline: "none" }}
+            cursor={{ stroke: "rgba(34,211,238,0.12)", strokeWidth: 1, fill: "rgba(34,211,238,0.02)" }}
+            formatter={(value: number | undefined) => [
+              `$${(value ?? 0).toLocaleString("en-US", { maximumFractionDigits: 0 })}`,
+            ]}
+          />
+          <Legend
+            wrapperStyle={{ color: "#64748b", fontSize: "12px", paddingTop: "12px" }}
+            iconType="plainline"
+            iconSize={16}
           />
           {participants.map((p, index) => (
             <Area
               key={p.strategy_id}
               type="monotone"
               dataKey={p.strategy_name || p.strategy_id}
-              stroke={COLORS[index % COLORS.length]}
-              fillOpacity={1}
-              fill={`url(#color${index})`}
+              stroke={CHART_COLORS[index % CHART_COLORS.length]}
+              strokeWidth={2}
+              fill={`url(#pv-grad${index})`}
+              dot={false}
+              activeDot={{ r: 4, strokeWidth: 0 }}
             />
           ))}
         </AreaChart>

@@ -124,6 +124,12 @@ async def run_match(
         engine = MatchEngine(match_config)
         match = engine.initialize_match(pydantic_strategies)
 
+        # 确保行情数据长度足够
+        if len(market_data) < request.duration_steps:
+            raise ValueError(
+                f"行情数据不足: 获取到 {len(market_data)} 步，需要 {request.duration_steps} 步"
+            )
+
         # 执行比赛
         for step in range(request.duration_steps):
             current_price = market_data[step]["close"]

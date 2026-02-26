@@ -171,7 +171,15 @@ class CoinGeckoFetcher:
         klines = cls._convert_ohlc(raw)
 
         # 截取所需步数
-        if len(klines) <= steps:
+        if len(klines) < steps:
+            # 数据不足时用最后一根收盘价补充模拟数据
+            last_price = klines[-1]["close"] if klines else 2000.0
+            extra = MarketDataGenerator.generate_random_walk(
+                initial_price=last_price,
+                steps=steps - len(klines) + 1,
+            )
+            klines = klines + extra[1:]  # 避免首尾重复
+        if len(klines) == steps:
             return klines
         # 从随机起始位置截取连续 steps 段
         start = int(np.random.randint(0, len(klines) - steps))

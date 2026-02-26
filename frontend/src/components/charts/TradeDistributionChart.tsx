@@ -14,49 +14,58 @@ interface TradeDistributionChartProps {
   participants: MatchParticipant[];
 }
 
-const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+const CHART_COLORS = ["#22d3ee", "#10b981", "#f59e0b", "#fb7185", "#a78bfa", "#fb923c"];
+
+const TOOLTIP_STYLE = {
+  background: "#0d1426",
+  border: "1px solid #1e293b",
+  borderRadius: "8px",
+  color: "#94a3b8",
+  fontSize: "12px",
+  boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
+  padding: "10px 14px",
+};
 
 export const TradeDistributionChart: React.FC<TradeDistributionChartProps> = ({
   participants,
 }) => {
-  const data = participants.map((p) => ({
-    name: p.strategy_name || "未知策略",
-    value: p.total_trades,
-  }));
+  const data = participants
+    .map((p) => ({ name: p.strategy_name || "未知策略", value: p.total_trades }))
+    .filter((d) => d.value > 0);
 
   return (
-    <div className={`card ${styles.container}`}>
-      <h3 className={`text-lg font-semibold text-gradient mb-4 ${styles.title}`}>交易次数分布</h3>
-      <ResponsiveContainer width="100%" height={300}>
+    <div className={styles.container}>
+      <p className={styles.title}>交易次数分布</p>
+      <ResponsiveContainer width="100%" height={280}>
         <PieChart>
           <Pie
             data={data}
             cx="50%"
-            cy="50%"
-            labelLine={false}
-            label={({ name, percent = 0 }) =>
-              `${name}: ${(percent * 100).toFixed(0)}%`
-            }
-            outerRadius={100}
-            fill="#8884d8"
+            cy="48%"
+            innerRadius={60}
+            outerRadius={95}
+            paddingAngle={3}
             dataKey="value"
+            stroke="none"
           >
             {data.map((_entry, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill={COLORS[index % COLORS.length]}
+                fill={CHART_COLORS[index % CHART_COLORS.length]}
               />
             ))}
           </Pie>
           <Tooltip
-            contentStyle={{
-              backgroundColor: "#1e293b",
-              border: "1px solid #475569",
-              borderRadius: "8px",
-              color: "#e2e8f0",
-            }}
+            contentStyle={TOOLTIP_STYLE}
+            labelStyle={{ color: "#475569", marginBottom: "4px", fontSize: "11px" }}
+            wrapperStyle={{ outline: "none" }}
+            formatter={(value: number | undefined) => [value ?? 0, "交易次数"]}
           />
-          <Legend wrapperStyle={{ color: "#94a3b8" }} />
+          <Legend
+            wrapperStyle={{ color: "#64748b", fontSize: "12px" }}
+            iconType="circle"
+            iconSize={8}
+          />
         </PieChart>
       </ResponsiveContainer>
     </div>

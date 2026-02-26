@@ -8,7 +8,9 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer,
+  Cell,
 } from "recharts";
 import type { Match } from "../../types/match";
 import type { Strategy } from "../../types/strategy";
@@ -21,6 +23,23 @@ const TYPE_LABELS: Record<string, string> = {
   custom: "自定义",
 };
 
+const TYPE_COLORS: Record<string, string> = {
+  "均值回归": "#22d3ee",
+  "动量追踪": "#10b981",
+  "定投策略": "#f59e0b",
+  "自定义":   "#a78bfa",
+};
+
+const TOOLTIP_STYLE = {
+  background: "#0d1426",
+  border: "1px solid #1e293b",
+  borderRadius: "8px",
+  color: "#94a3b8",
+  fontSize: "12px",
+  boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
+  padding: "10px 14px",
+};
+
 interface DashboardChartsProps {
   matches: Match[];
   strategies: Strategy[];
@@ -30,22 +49,14 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
   matches,
   strategies,
 }) => {
-  // 最近 7 天每天的比赛数和策略创建数（真实数据）
   const recentActivity = useMemo(() => {
     const days: { day: string; matches: number; strategies: number }[] = [];
     const now = new Date();
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now);
       d.setDate(d.getDate() - i);
-      const dateStr = d.toLocaleDateString("zh-CN", {
-        month: "numeric",
-        day: "numeric",
-      });
-      const dayStart = new Date(
-        d.getFullYear(),
-        d.getMonth(),
-        d.getDate(),
-      ).getTime();
+      const dateStr = d.toLocaleDateString("zh-CN", { month: "numeric", day: "numeric" });
+      const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
       const dayEnd = dayStart + 86400000;
       days.push({
         day: dateStr,
@@ -62,7 +73,6 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
     return days;
   }, [matches, strategies]);
 
-  // 策略类型分布（真实数据）
   const typeDistribution = useMemo(() => {
     const counts: Record<string, number> = {};
     strategies.forEach((s) => {
@@ -74,63 +84,50 @@ export const DashboardCharts: React.FC<DashboardChartsProps> = ({
 
   return (
     <div className={styles.grid}>
-      {/* 最近活动 */}
-      <div className={`card ${styles.chartCard}`}>
-        <h3 className={`text-lg font-semibold text-gradient mb-4 ${styles.chartTitle}`}>
-          最近活动趋势
-        </h3>
-        <ResponsiveContainer width="100%" height={250}>
-          <LineChart data={recentActivity}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-            <XAxis dataKey="day" stroke="#94a3b8" />
-            <YAxis stroke="#94a3b8" allowDecimals={false} />
+      {/* 最近活动趋势 */}
+      <div className={styles.chartCard}>
+        <p className={styles.chartTitle}>最近活动趋势</p>
+        <ResponsiveContainer width="100%" height={240}>
+          <LineChart data={recentActivity} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="1 4" stroke="rgba(148,163,184,0.07)" vertical={false} />
+            <XAxis dataKey="day" tick={{ fill: "#475569", fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: "#475569", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
             <Tooltip
-              contentStyle={{
-                backgroundColor: "#1e293b",
-                border: "1px solid #475569",
-                borderRadius: "8px",
-                color: "#e2e8f0",
-              }}
+              contentStyle={TOOLTIP_STYLE}
+              labelStyle={{ color: "#475569", marginBottom: "4px", fontSize: "11px" }}
+              wrapperStyle={{ outline: "none" }}
+              cursor={{ stroke: "rgba(34,211,238,0.12)", strokeWidth: 1 }}
             />
-            <Line
-              type="monotone"
-              dataKey="matches"
-              stroke="#3b82f6"
-              strokeWidth={2}
-              name="比赛"
-              dot={{ fill: "#3b82f6" }}
-            />
-            <Line
-              type="monotone"
-              dataKey="strategies"
-              stroke="#10b981"
-              strokeWidth={2}
-              name="策略"
-              dot={{ fill: "#10b981" }}
-            />
+            <Legend wrapperStyle={{ color: "#64748b", fontSize: "12px", paddingTop: "8px" }} iconType="plainline" iconSize={14} />
+            <Line type="monotone" dataKey="matches"    stroke="#22d3ee" strokeWidth={2} name="比赛" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
+            <Line type="monotone" dataKey="strategies" stroke="#10b981" strokeWidth={2} name="策略" dot={false} activeDot={{ r: 4, strokeWidth: 0 }} />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
       {/* 策略类型分布 */}
-      <div className={`card ${styles.chartCard}`}>
-        <h3 className={`text-lg font-semibold text-gradient mb-4 ${styles.chartTitle}`}>
-          策略类型分布
-        </h3>
-        <ResponsiveContainer width="100%" height={250}>
-          <BarChart data={typeDistribution}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-            <XAxis dataKey="type" stroke="#94a3b8" />
-            <YAxis stroke="#94a3b8" allowDecimals={false} />
+      <div className={styles.chartCard}>
+        <p className={styles.chartTitle}>策略类型分布</p>
+        <ResponsiveContainer width="100%" height={240}>
+          <BarChart data={typeDistribution} margin={{ top: 4, right: 8, left: -16, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="1 4" stroke="rgba(148,163,184,0.07)" vertical={false} />
+            <XAxis dataKey="type" tick={{ fill: "#94a3b8", fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: "#475569", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
             <Tooltip
-              contentStyle={{
-                backgroundColor: "#1e293b",
-                border: "1px solid #475569",
-                borderRadius: "8px",
-                color: "#e2e8f0",
-              }}
+              contentStyle={TOOLTIP_STYLE}
+              labelStyle={{ color: "#475569", marginBottom: "4px", fontSize: "11px" }}
+              wrapperStyle={{ outline: "none" }}
+              cursor={{ fill: "rgba(34,211,238,0.04)" }}
+              formatter={(value: number | undefined) => [value ?? 0, "策略数量"]}
             />
-            <Bar dataKey="count" fill="#6366f1" radius={[8, 8, 0, 0]} />
+            <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={40}>
+              {typeDistribution.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={TYPE_COLORS[entry.type] ?? "#22d3ee"}
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>

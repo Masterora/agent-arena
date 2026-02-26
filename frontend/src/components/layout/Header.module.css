@@ -1,9 +1,7 @@
 ﻿@reference "../../index.css";
 .header {
-  @apply bg-black border border-slate-800 rounded-2xl
-         border-b border-slate-700/50
-         sticky top-0 z-50
-         shadow-xl shadow-indigo-500/10;
+  @apply bg-[#0c1120] border-b border-[#1e2035]
+         sticky top-0 z-50;
 }
 .inner {
   @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
@@ -15,13 +13,13 @@
   @apply flex items-center gap-3 hover:opacity-80 transition-opacity;
 }
 .logoIcon {
-  @apply p-2 rounded-lg transition-all
-         bg-gradient-to-r from-indigo-600 to-blue-600
-         hover:shadow-lg hover:shadow-indigo-500/40;
+  @apply p-2 rounded-lg transition-colors
+         bg-cyan-500/10 border border-cyan-500/20
+         hover:bg-cyan-500/15;
 }
 .logoText {
-  @apply text-2xl font-bold
-         bg-gradient-to-r from-indigo-400 to-blue-400 bg-clip-text text-transparent;
+  @apply text-xl font-bold
+         bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent;
 }
 .nav {
   @apply flex gap-8 items-center;

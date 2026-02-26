@@ -8,6 +8,7 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
+  ReferenceLine,
 } from "recharts";
 import type { MatchParticipant } from "../../types/match";
 import styles from "./Chart.module.css";
@@ -16,54 +17,66 @@ interface ComparisonChartProps {
   participants: MatchParticipant[];
 }
 
+const TOOLTIP_STYLE = {
+  background: "#0d1426",
+  border: "1px solid #1e293b",
+  borderRadius: "8px",
+  color: "#94a3b8",
+  fontSize: "12px",
+  boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
+  padding: "10px 14px",
+};
+
+const getBarColor = (value: number) => {
+  if (value >= 5)  return "#10b981";
+  if (value >= 0)  return "#22d3ee";
+  if (value >= -5) return "#f59e0b";
+  return "#fb7185";
+};
+
 export const ComparisonChart: React.FC<ComparisonChartProps> = ({
   participants,
 }) => {
-  const data = participants
+  const data = [...participants]
     .sort((a, b) => (b.return_pct || 0) - (a.return_pct || 0))
     .map((p) => ({
       name: p.strategy_name || "未知策略",
       return: p.return_pct || 0,
-      trades: p.total_trades,
-      winRate: p.total_trades > 0 ? (p.win_trades / p.total_trades) * 100 : 0,
     }));
 
-  const getBarColor = (value: number) => {
-    if (value >= 10) return "#10b981"; // green
-    if (value >= 5) return "#3b82f6"; // blue
-    if (value >= 0) return "#f59e0b"; // amber
-    return "#ef4444"; // red
-  };
-
   return (
-    <div className={`card ${styles.container}`}>
-      <h3 className={`text-lg font-semibold text-gradient mb-4 ${styles.title}`}>策略收益对比</h3>
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-          <XAxis dataKey="name" stroke="#94a3b8" style={{ color: "#94a3b8" }} />
+    <div className={styles.container}>
+      <p className={styles.title}>策略收益对比</p>
+      <ResponsiveContainer width="100%" height={280}>
+        <BarChart data={data} layout="vertical" margin={{ top: 4, right: 24, left: 8, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="1 4" stroke="rgba(148,163,184,0.07)" horizontal={false} />
+          <XAxis
+            type="number"
+            tick={{ fill: "#475569", fontSize: 11 }}
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={(v) => `${Number(v) > 0 ? "+" : ""}${Number(v).toFixed(1)}%`}
+          />
           <YAxis
-            label={{
-              value: "收益率 (%)",
-              angle: -90,
-              position: "insideLeft",
-              style: { color: "#94a3b8" },
-            }}
-            stroke="#94a3b8"
-            style={{ color: "#94a3b8" }}
+            type="category"
+            dataKey="name"
+            tick={{ fill: "#94a3b8", fontSize: 12 }}
+            axisLine={false}
+            tickLine={false}
+            width={80}
           />
+          <ReferenceLine x={0} stroke="rgba(148,163,184,0.2)" />
           <Tooltip
-            contentStyle={{
-              backgroundColor: "#1e293b",
-              border: "1px solid #475569",
-              borderRadius: "8px",
-              color: "#e2e8f0",
-            }}
-            formatter={(value: number | undefined) =>
-              `${(value ?? 0).toFixed(2)}%`
-            }
+            contentStyle={TOOLTIP_STYLE}
+            labelStyle={{ color: "#475569", marginBottom: "4px", fontSize: "11px" }}
+            wrapperStyle={{ outline: "none" }}
+            cursor={{ fill: "rgba(34,211,238,0.04)" }}
+            formatter={(value: number | undefined) => [
+              `${(value ?? 0) > 0 ? "+" : ""}${(value ?? 0).toFixed(2)}%`,
+              "收益率",
+            ]}
           />
-          <Bar dataKey="return" radius={[8, 8, 0, 0]}>
+          <Bar dataKey="return" radius={[0, 4, 4, 0]} maxBarSize={28}>
             {data.map((entry, index) => (
               <Cell key={`cell-${index}`} fill={getBarColor(entry.return)} />
             ))}
