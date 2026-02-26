@@ -65,14 +65,18 @@ const MatchDetail: React.FC = () => {
                 ? "status-completed"
                 : match.status === "running"
                   ? "status-running"
-                  : "status-pending"
+                  : match.status === "failed"
+                    ? "status-failed"
+                    : "status-pending"
             }`}
           >
             {match.status === "completed"
               ? "已完成"
               : match.status === "running"
                 ? "进行中"
-                : "等待中"}
+                : match.status === "failed"
+                  ? "失败"
+                  : "等待中"}
           </div>
         </div>
       </div>
@@ -228,8 +232,15 @@ const MatchDetail: React.FC = () => {
               </div>
               {sortedParticipants[0] && (
                 <div>
-                  <div className="text-3xl font-bold text-emerald-400 mb-1">
-                    +{(sortedParticipants[0].return_pct || 0).toFixed(2)}%
+                  <div
+                    className={`text-3xl font-bold mb-1 ${
+                      (sortedParticipants[0].return_pct || 0) >= 0
+                        ? "text-emerald-400"
+                        : "text-red-400"
+                    }`}
+                  >
+                    {(sortedParticipants[0].return_pct || 0) >= 0 ? "+" : ""}
+                    {(sortedParticipants[0].return_pct || 0).toFixed(2)}%
                   </div>
                   <div className="text-sm text-slate-400">
                     {sortedParticipants[0].strategy_name}

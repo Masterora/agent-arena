@@ -48,11 +48,13 @@ export const RunMatchForm: React.FC<RunMatchFormProps> = ({
   }, []);
 
   const handleSelectStrategy = (strategyId: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(strategyId)
-        ? prev.filter((id) => id !== strategyId)
-        : [...prev, strategyId],
-    );
+    setSelectedIds((prev) => {
+      if (prev.includes(strategyId)) {
+        return prev.filter((id) => id !== strategyId);
+      }
+      if (prev.length >= 10) return prev; // 最多选 10 个
+      return [...prev, strategyId];
+    });
   };
 
   const handleSubmit = (e: React.FormEvent) => {

@@ -35,6 +35,16 @@ export const StrategyForm: React.FC<StrategyFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.params.buy_threshold >= formData.params.sell_threshold) {
+      alert("买入阈值必须小于卖出阈值");
+      return;
+    }
+    if (
+      formData.params.position_size > (formData.params.max_position_pct ?? 0.5)
+    ) {
+      alert("每次仓位大小不能超过最大仓位限制");
+      return;
+    }
     onSubmit(formData);
   };
 
