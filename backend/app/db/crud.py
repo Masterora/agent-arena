@@ -215,12 +215,32 @@ class MatchCRUD:
                     rank=result["rank"],
                     max_drawdown=result.get("max_drawdown", 0.0),
                     sharpe_ratio=result.get("sharpe_ratio", 0.0),
+                    value_history=result.get("value_history", []),
                 )
             )
             db.execute(stmt)
 
         db.commit()
         logger.info(f"保存比赛结果: {match_id}")
+
+    @staticmethod
+    def set_error(db: Session, match_id: str, error: str):
+        """记录比赛失败原因"""
+        db_match = MatchCRUD.get(db, match_id)
+        if db_match:
+            db_match.error_message = error
+            db.commit()
+
+    @staticmethod
+    def delete(db: Session, match_id: str) -> bool:
+        """删除比赛"""
+        db_match = MatchCRUD.get(db, match_id)
+        if not db_match:
+            return False
+        db.delete(db_match)
+        db.commit()
+        logger.info(f"删除比赛: {match_id}")
+        return True
 
     @staticmethod
     def add_log(

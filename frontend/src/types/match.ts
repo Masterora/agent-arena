@@ -19,6 +19,9 @@ export interface MatchParticipant {
   total_trades: number;
   win_trades: number;
   rank?: number;
+  max_drawdown?: number;
+  sharpe_ratio?: number;
+  value_history?: number[];
 }
 
 export interface MatchConfig {
@@ -51,6 +54,7 @@ export interface MatchLogEntry {
 export interface Match {
   id: string;
   status: MatchStatus;
+  error_message?: string;
   config: MatchConfig;
   created_at: string;
   start_time?: string;

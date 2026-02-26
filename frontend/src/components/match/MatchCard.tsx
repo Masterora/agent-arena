@@ -1,12 +1,13 @@
 ﻿import React from "react";
 import type { Match } from "../../types/match";
-import { Clock, TrendingUp, Users, Calendar, Edit } from "lucide-react";
+import { Clock, TrendingUp, Users, Calendar, Edit, Trash2, AlertCircle, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import styles from "./MatchCard.module.css";
 
 interface MatchCardProps {
   match: Match;
   onEdit?: (match: Match) => void;
+  onDelete?: (match: Match) => void;
 }
 
 const statusLabels: Record<string, string> = {
@@ -23,7 +24,7 @@ const statusColors: Record<string, string> = {
   failed: "status-failed",
 };
 
-export const MatchCard: React.FC<MatchCardProps> = ({ match, onEdit }) => {
+export const MatchCard: React.FC<MatchCardProps> = ({ match, onEdit, onDelete }) => {
   const topParticipant = (match.participants ?? [])
     .filter((p) => p.rank === 1)
     .sort((a, b) => (b.return_pct || 0) - (a.return_pct || 0))[0];
@@ -43,6 +44,29 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, onEdit }) => {
                   {statusLabels[match.status]}
                 </span>
               </div>
+
+              {/* 进行中动画 */}
+              {match.status === "running" && (
+                <div className="flex items-center gap-1.5 text-xs text-blue-400 mt-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>比赛进行中…</span>
+                </div>
+              )}
+              {/* 等待中提示 */}
+              {match.status === "pending" && (
+                <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1">
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>等待启动…</span>
+                </div>
+              )}
+              {/* 失败原因 */}
+              {match.status === "failed" && match.error_message && (
+                <div className={styles.errorBadge}>
+                  <AlertCircle className="h-3 w-3 flex-shrink-0 mt-0.5" />
+                  <span className="line-clamp-2">{match.error_message}</span>
+                </div>
+              )}
+
               <div className={styles.meta}>
                 <div className={styles.metaItem}>
                   <Calendar className="h-4 w-4" />
@@ -110,13 +134,23 @@ export const MatchCard: React.FC<MatchCardProps> = ({ match, onEdit }) => {
           </div>
         </div>
       </Link>
+
       {onEdit && (
         <button
           className={styles.editBtn}
-          onClick={() => onEdit(match)}
+          onClick={(e) => { e.preventDefault(); onEdit(match); }}
           title="复制并编辑此比赛配置"
         >
           <Edit className="h-4 w-4" />
+        </button>
+      )}
+      {onDelete && match.status !== "running" && match.status !== "pending" && (
+        <button
+          className={styles.deleteBtn}
+          onClick={(e) => { e.preventDefault(); onDelete(match); }}
+          title="删除比赛"
+        >
+          <Trash2 className="h-4 w-4" />
         </button>
       )}
     </div>

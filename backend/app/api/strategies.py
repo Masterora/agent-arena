@@ -113,10 +113,8 @@ async def update_strategy(
         raise HTTPException(status_code=404, detail="策略不存在")
 
     # 更新字段
+    # model_dump() already serializes nested Pydantic models (e.g. StrategyParams) to dicts
     update_data = strategy_update.model_dump(exclude_unset=True)
-
-    if "params" in update_data:
-        update_data["params"] = update_data["params"].model_dump()
 
     db_strategy = StrategyCRUD.update(db, strategy_id, **update_data)
 

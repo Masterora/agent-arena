@@ -85,6 +85,7 @@ class Match(Base):
     start_time: Mapped[Optional[datetime]] = mapped_column(DateTime)
     end_time: Mapped[Optional[datetime]] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    error_message: Mapped[Optional[str]] = mapped_column(Text)  # 失败原因
 
     # 关系
     creator: Mapped[Optional["User"]] = relationship(back_populates="matches")
@@ -113,6 +114,7 @@ class MatchParticipant(Base):
     rank: Mapped[Optional[int]] = mapped_column(Integer)
     max_drawdown: Mapped[float] = mapped_column(Float, default=0.0)
     sharpe_ratio: Mapped[float] = mapped_column(Float, default=0.0)
+    value_history: Mapped[Optional[list]] = mapped_column(JSON)  # List[float] 每步资产价值
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

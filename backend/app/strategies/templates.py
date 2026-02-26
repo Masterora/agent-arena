@@ -12,12 +12,12 @@ class MeanReversionStrategy(StrategyBase):
         sell_threshold = self.params.get("sell_threshold", 1.03)
         position_size = self.params.get("position_size", 0.2)
 
-        # 数据不足
-        if len(market_data) < lookback:
+        # 需要 lookback+1 条数据（当前价 + lookback 条历史）
+        if len(market_data) < lookback + 1:
             return Action(type="hold")
 
-        # 计算均值
-        recent_closes = [k["close"] for k in market_data[-lookback:]]
+        # 用当前价之前的 lookback 条历史计算均值（不含当前价，避免自相关）
+        recent_closes = [k["close"] for k in market_data[-(lookback + 1):-1]]
         avg_price = sum(recent_closes) / len(recent_closes)
         current_price = market_data[-1]["close"]
 

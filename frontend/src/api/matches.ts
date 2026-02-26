@@ -16,9 +16,14 @@ export const matchesApi = {
     return response.data;
   },
 
-  // 运行比赛
-  run: async (data: RunMatchRequest): Promise<Match> => {
+  // 运行比赛（异步，立即返回 match_id）
+  run: async (data: RunMatchRequest): Promise<{ match_id: string; status: string; message: string }> => {
     const response = await apiClient.post("/api/matches/run", data);
     return response.data;
+  },
+
+  // 删除比赛
+  deleteMatch: async (id: string): Promise<void> => {
+    await apiClient.delete(`/api/matches/${id}`);
   },
 };

@@ -6,6 +6,8 @@ import {
   TrendingUp,
   Activity,
   BarChart3,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { useMatch } from "../hooks/useMatches";
 import { Loading } from "../components/common/Loading";
@@ -80,6 +82,24 @@ const MatchDetail: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* 运行中提示 */}
+      {(match.status === "running" || match.status === "pending") && (
+        <div className="card flex items-center gap-3 text-blue-400">
+          <Loader2 className="h-5 w-5 animate-spin flex-shrink-0" />
+          <span className="text-sm">比赛正在运行中，结果将在几秒内自动刷新…</span>
+        </div>
+      )}
+      {/* 失败原因 */}
+      {match.status === "failed" && match.error_message && (
+        <div className="card flex items-start gap-3 bg-red-500/5 border-red-500/20">
+          <AlertCircle className="h-5 w-5 text-red-400 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-red-400 mb-1">比赛执行失败</p>
+            <p className="text-sm text-slate-400">{match.error_message}</p>
+          </div>
+        </div>
+      )}
 
       {/* 标签页切换 */}
       <div className="card pt-0 pb-0 border-b">

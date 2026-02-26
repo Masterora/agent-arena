@@ -4,6 +4,7 @@ import { Button } from "../components/common/Button";
 import { DashboardCharts } from "../components/home/DashboardCharts";
 import { useStrategies } from "../hooks/useStrategies";
 import { useMatches } from "../hooks/useMatches";
+import { Zap, ArrowRight } from "lucide-react";
 
 const Home: React.FC = () => {
   const { data: strategies = [] } = useStrategies();
@@ -83,9 +84,30 @@ const Home: React.FC = () => {
         </div>
       </div>
 
-      {/* 图表 */}
-      {(strategies.length > 0 || matches.length > 0) && (
+      {/* 图表 / 空状态 */}
+      {(strategies.length > 0 || matches.length > 0) ? (
         <DashboardCharts matches={matches} strategies={strategies} />
+      ) : (
+        <div className="card text-center py-14">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-indigo-500/10 border border-indigo-500/20 mb-5">
+            <Zap className="h-8 w-8 text-indigo-400" />
+          </div>
+          <h3 className="text-xl font-semibold text-slate-100 mb-2">还没有任何数据</h3>
+          <p className="text-slate-400 mb-8 max-w-sm mx-auto">先创建几个策略，然后发起一场比赛，图表和统计就会出现在这里。</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link to="/strategies?create=true">
+              <Button className="btn-primary w-full sm:w-auto">
+                第一步：创建策略
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </Link>
+            <Link to="/matches">
+              <Button className="btn-outline w-full sm:w-auto">
+                第二步：发起比赛
+              </Button>
+            </Link>
+          </div>
+        </div>
       )}
     </div>
   );

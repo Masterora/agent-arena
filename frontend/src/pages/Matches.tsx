@@ -6,7 +6,7 @@ import { RunMatchForm } from "../components/match/RunMatchForm";
 import { Loading } from "../components/common/Loading";
 import { Toast } from "../components/common/Toast";
 import { useToast } from "../hooks/useToast";
-import { useMatches, useRunMatch } from "../hooks/useMatches";
+import { useMatches, useRunMatch, useDeleteMatch } from "../hooks/useMatches";
 import type { Match, MatchStatus, RunMatchRequest } from "../types/match";
 
 const Matches: React.FC = () => {
@@ -22,6 +22,7 @@ const Matches: React.FC = () => {
   // 数据获取
   const { data: matches = [], isLoading } = useMatches();
   const runMatchMutation = useRunMatch();
+  const deleteMatchMutation = useDeleteMatch();
 
   // 过滤比赛
   const filteredMatches =
@@ -33,12 +34,23 @@ const Matches: React.FC = () => {
   const handleRunMatch = async (data: RunMatchRequest) => {
     try {
       await runMatchMutation.mutateAsync(data);
-      success("比赛运行成功！");
+      success("比赛已提交，正在后台运行中…");
       setIsFormOpen(false);
       setCloneDefaults(undefined);
     } catch (err) {
-      error("比赛运行失败，请重试");
+      error("比赛提交失败，请重试");
       console.error("运行比赛失败:", err);
+    }
+  };
+
+  // 处理删除比赛
+  const handleDeleteMatch = async (match: Match) => {
+    if (!window.confirm(`确定要删除这场比赛吗？`)) return;
+    try {
+      await deleteMatchMutation.mutateAsync(match.id);
+      success("比赛已删除");
+    } catch {
+      error("删除失败，请重试");
     }
   };
 
@@ -170,7 +182,7 @@ const Matches: React.FC = () => {
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredMatches.map((match) => (
-            <MatchCard key={match.id} match={match} onEdit={handleEditMatch} />
+            <MatchCard key={match.id} match={match} onEdit={handleEditMatch} onDelete={handleDeleteMatch} />
           ))}
         </div>
       )}

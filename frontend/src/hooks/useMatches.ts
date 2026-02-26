@@ -10,7 +10,7 @@ export const useMatches = () => {
       const data = query.state.data;
       return Array.isArray(data) &&
         data.some((m) => m.status === "running" || m.status === "pending")
-        ? 3000
+        ? 2000
         : false;
     },
   });
@@ -24,7 +24,7 @@ export const useMatch = (id: string, includeLogs = false) => {
     refetchInterval: (query) => {
       const data = query.state.data;
       return data?.status === "running" || data?.status === "pending"
-        ? 3000
+        ? 2000
         : false;
     },
   });
@@ -38,6 +38,17 @@ export const useRunMatch = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["matches"] });
       queryClient.invalidateQueries({ queryKey: ["strategies"] });
+    },
+  });
+};
+
+export const useDeleteMatch = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (id: string) => matchesApi.deleteMatch(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["matches"] });
     },
   });
 };

@@ -31,7 +31,26 @@ const TOOLTIP_STYLE = {
   padding: "10px 14px",
 };
 
-/** 从执行日志构建资金变化曲线（真实数据） */
+/** 优先使用 value_history（完整每步数据） */
+const buildFromValueHistory = (
+  participants: MatchParticipant[],
+  initialCapital: number,
+): Record<string, number | string>[] | null => {
+  const withHistory = participants.filter((p) => p.value_history && p.value_history.length > 1);
+  if (withHistory.length === 0) return null;
+  const maxLen = Math.max(...withHistory.map((p) => p.value_history!.length));
+  return Array.from({ length: maxLen }, (_, i) => {
+    const row: Record<string, number | string> = { step: i };
+    participants.forEach((p) => {
+      const name = p.strategy_name || p.strategy_id;
+      const v = p.value_history?.[i];
+      row[name] = v !== undefined ? parseFloat(v.toFixed(2)) : initialCapital;
+    });
+    return row;
+  });
+};
+
+/** 从执行日志构建资金变化曲线（备用） */
 const buildFromLogs = (
   participants: MatchParticipant[],
   initialCapital: number,
@@ -75,9 +94,10 @@ export const PortfolioValueChart: React.FC<PortfolioValueChartProps> = ({
   participants, initialCapital, steps, logs,
 }) => {
   const data =
-    logs && logs.length > 0
+    buildFromValueHistory(participants, initialCapital) ??
+    (logs && logs.length > 0
       ? buildFromLogs(participants, initialCapital, logs)
-      : buildFallback(participants, initialCapital, steps);
+      : buildFallback(participants, initialCapital, steps));
 
   return (
     <div className={styles.container}>

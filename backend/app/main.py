@@ -6,6 +6,7 @@ import sys
 from pathlib import Path
 
 from app.config import settings
+from app.database import init_db
 from app.api import strategies, matches, market
 
 # 配置日志
@@ -24,6 +25,7 @@ logger.add(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    init_db()
     logger.info("🚀 Agent Arena 服务启动成功")
     logger.info(f"📝 API 文档: http://{settings.host}:{settings.port}/docs")
     yield
