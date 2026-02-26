@@ -92,11 +92,12 @@ settings.secret_key     # JWT 签名密钥
 
 **ORM 模型**（`db/models.py`）：
 
-| 表 | 说明 |
-|---|---|
-| `strategies` | 策略定义：名称、类型、参数 JSON、统计信息 |
-| `matches` | 比赛记录：状态、配置 JSON、参与者 JSON |
-| `match_logs` | 执行日志：每 10 步快照，`data.logs` 含各策略持仓 |
+| 表 | 关键字段 | 说明 |
+|---|---|---|
+| `strategies` | `type`, `params`, `win_rate`, `avg_return`, `sharpe_ratio`, `max_drawdown` | 策略定义及累计统计 |
+| `matches` | `status`, `initial_capital`, `trading_pair`, `market_type` | 比赛记录与配置 |
+| `match_participants` | `return_pct`, `total_trades`, `win_trades`, `rank`, `max_drawdown`, `sharpe_ratio` | 参赛结果，每场比赛每个策略一行 |
+| `match_logs` | `step`, `data.logs` | 执行日志快照，每 10 步写一次 |
 
 **开发环境**使用 SQLite，路径 `backend/data/agent_arena.db`，首次启动自动创建。
 
@@ -163,7 +164,16 @@ settings.secret_key     # JWT 签名密钥
   "status": "completed",
   "config": { "initial_capital": 10000, "trading_pair": "ETH/USDC", "duration_steps": 100 },
   "participants": [
-    { "strategy_id": "...", "strategy_name": "...", "rank": 1, "return_pct": 5.23, "total_trades": 18, "win_trades": 12 }
+    {
+      "strategy_id": "...",
+      "strategy_name": "...",
+      "rank": 1,
+      "return_pct": 5.23,
+      "total_trades": 18,
+      "win_trades": 12,
+      "max_drawdown": 3.41,
+      "sharpe_ratio": 1.8832
+    }
   ],
   "logs": [
     {
@@ -193,10 +203,26 @@ settings.secret_key     # JWT 签名密钥
 
 `core/match_engine.py` — `MatchEngine` 类：
 
-1. **初始化**：为每个参与策略创建独立 `Portfolio`（持仓 + 现金）
-2. **主循环**：每步向所有策略提供相同行情数据 → 策略返回 `action` → 执行交易 → 更新持仓
-3. **日志**：每 10 步调用 `MatchCRUD.add_log()` 快照所有策略的持仓状态
-4. **结算**：循环结束后按最终 `total_value` 排名，写回数据库
+1. **初始化**：为每个策略创建独立 `Portfolio`（持仓 + 现金），并初始化 `value_history`（资产价值序列）和 `cost_basis`（各资产加权平均成本）
+2. **主循环**（每步）：
+   1. 检查止损/止盈（`_check_risk_controls`），触发则强制清仓
+   2. 无触发时，调用策略 `decide()` 获取操作指令
+   3. 买入前检查 `max_position_pct`，超限跳过
+   4. 执行 `buy` / `sell`，买入时更新加权平均成本，卖出时对比成本判断盈亏并计入 `win_trade_count`
+   5. 更新持仓总值，追加到 `value_history`
+3. **日志**：每 10 步调用 `MatchCRUD.add_log()` 快照各策略持仓状态
+4. **结算**：
+   - 按最终 `total_value` 排名
+   - 用 `value_history` 计算 **最大回撤**（`_calc_max_drawdown`）和 **年化夏普率**（`_calc_sharpe`，5 分钟 K 线，无风险利率=0）
+   - 写回 `match_participants` 和策略统计
+
+**风控参数触发逻辑：**
+
+| 参数 | 类型 | 含义 | 示例 |
+|---|---|---|---|
+| `stop_loss` | `float (0~1)` | 持仓亏损达此比例自动全部卖出 | `0.05` → 亏 5% 止损 |
+| `take_profit` | `float (>1)` | 持仓盈利达此倍数自动全部卖出 | `1.20` → 盈 20% 止盈 |
+| `max_position_pct` | `float (0~1)` | 单资产市值占总资产比例上限 | `0.5` → 最多 50% 仓位 |
 
 ### 2.6 行情数据
 
@@ -214,16 +240,31 @@ settings.secret_key     # JWT 签名密钥
 
 ### 2.7 策略系统
 
-所有策略继承 `strategies/base.py::BaseStrategy`，实现 `execute(market_data, portfolio)` 方法，返回：
+所有策略继承 `strategies/base.py::StrategyBase`，实现 `decide(market_data, step)` 方法，返回 `Action` 对象：
 
 ```python
-{ "type": "buy" | "sell" | "hold", "asset": "ETH", "amount": 0.5 }
+Action(type="buy" | "sell" | "hold", asset="ETH", amount=1000.0)
 ```
 
-内置策略模板（`strategies/templates.py`）：
-- `MeanReversionStrategy` — 价格偏离均值触发买卖
-- `MomentumStrategy` — 追涨杀跌
-- `DCAStrategy` — 定期定额买入
+**内置策略模板**（`strategies/templates.py`）：
+
+| 策略类 | 类型值 | 核心逻辑 |
+|---|---|---|
+| `MeanReversionStrategy` | `mean_reversion` | 价格低于均值×`buy_threshold` 买，高于均值×`sell_threshold` 卖 |
+| `MomentumStrategy` | `momentum` | 价格相对 N 步前涨幅超 `buy_threshold` 追涨，跌超 2% 止损 |
+| `DCAStrategy` | `dca` | 每隔 `lookback_period` 步买入固定金额 |
+
+**策略参数一览**（`models/strategy.py::StrategyParams`）：
+
+| 参数 | 默认值 | 范围 | 说明 |
+|---|---|---|---|
+| `lookback_period` | `20` | 1–200 | 均值/动量回看周期；DCA 买入间隔步数 |
+| `buy_threshold` | `0.97` | 0–10 | 均值回归：低于均值的比例触发买；动量：高于基准的倍数触发买 |
+| `sell_threshold` | `1.03` | 0–10 | 均值回归：高于均值的比例触发卖 |
+| `position_size` | `0.1` | 0–1 | 每次买入占可用资金的比例 |
+| `max_position_pct` | `0.5` | 0–1 | 单资产持仓占总资产的上限（引擎强制执行） |
+| `stop_loss` | `null` | 0–1 | 持仓亏损比例触发全部止损（如 `0.05`） |
+| `take_profit` | `null` | >1 | 持仓盈利倍数触发全部止盈（如 `1.20`） |
 
 ---
 
@@ -423,22 +464,34 @@ VITE_API_URL=http://localhost:9000
 
 ## 6. 数据库迁移
 
-项目使用 **Alembic** 管理数据库版本：
+项目使用 **Alembic** 管理数据库版本，迁移脚本位于 `alembic/versions/`，**已纳入版本控制**。
 
 ```bash
 cd backend
 
-# 生成迁移文件
+# 执行所有待应用的迁移（首次部署或拉取新代码后运行）
+alembic upgrade head
+
+# 新增表结构变更后，自动生成迁移文件
 alembic revision --autogenerate -m "描述变更"
 
-# 执行迁移
-alembic upgrade head
+# 查看当前迁移状态
+alembic current
+
+# 查看迁移历史
+alembic history --verbose
 
 # 回滚一步
 alembic downgrade -1
 ```
 
-开发时若使用 SQLite，直接删除 `data/agent_arena.db` 重启服务即可重建表结构（`init_db()` 在 lifespan 中自动调用）。
+**已有迁移列表：**
+
+| 文件 | 说明 |
+|---|---|
+| `001_add_metrics_to_participants.py` | 为 `match_participants` 新增 `max_drawdown`、`sharpe_ratio` 两列 |
+
+> **SQLite 开发模式**：直接删除 `data/agent_arena.db`，重启服务会自动调用 `init_db()` 重建所有表。Alembic 迁移主要用于 PostgreSQL 生产环境的增量变更。
 
 ---
 

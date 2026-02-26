@@ -73,6 +73,8 @@ CREATE TABLE match_participants (
     total_trades INTEGER DEFAULT 0,
     win_trades INTEGER DEFAULT 0,
     rank INTEGER,
+    max_drawdown FLOAT DEFAULT 0.0,
+    sharpe_ratio FLOAT DEFAULT 0.0,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 

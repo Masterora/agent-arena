@@ -105,9 +105,20 @@ class StrategyCRUD:
 
         db_strategy.win_rate = db_strategy.wins / db_strategy.total_matches
 
-        # 更新平均收益
+        # 滚动更新平均收益率
         old_total = db_strategy.avg_return * (db_strategy.total_matches - 1)
         db_strategy.avg_return = (old_total + match_result.get("return_pct", 0)) / db_strategy.total_matches
+
+        # 滚动更新最大回撤（取最大值记录历史最坏情况）
+        new_dd = match_result.get("max_drawdown", 0.0)
+        if new_dd > db_strategy.max_drawdown:
+            db_strategy.max_drawdown = new_dd
+
+        # 滚动更新夏普率（滑动平均）
+        old_sharpe_total = db_strategy.sharpe_ratio * (db_strategy.total_matches - 1)
+        db_strategy.sharpe_ratio = (
+            old_sharpe_total + match_result.get("sharpe_ratio", 0.0)
+        ) / db_strategy.total_matches
 
         db.commit()
 
@@ -201,7 +212,9 @@ class MatchCRUD:
                     return_pct=result["return_pct"],
                     total_trades=result["total_trades"],
                     win_trades=result["win_trades"],
-                    rank=result["rank"]
+                    rank=result["rank"],
+                    max_drawdown=result.get("max_drawdown", 0.0),
+                    sharpe_ratio=result.get("sharpe_ratio", 0.0),
                 )
             )
             db.execute(stmt)

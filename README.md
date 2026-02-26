@@ -4,14 +4,14 @@
 
 ## 项目简介
 
-Agent Arena 是一个全栈交易策略对抗平台。用户可以创建参数化或自定义 Python 策略，并将多个策略放入同一场比赛，在模拟或真实加密行情中实时执行，最终按收益率排名产生胜者。
+Agent Arena 是一个全栈交易策略对抗平台。用户可以创建参数化策略，并将多个策略放入同一场比赛，在模拟或真实加密行情中实时执行，最终按收益率排名产生胜者。
 
 **核心功能：**
 
-- 📝 **策略管理** — 创建、编辑、删除均值回归 / 动量追踪 / 定投 / 自定义策略
+- 📝 **策略管理** — 创建、编辑、删除均值回归 / 动量追踪 / 定投策略，支持止损/止盈/最大持仓等风控参数
 - ⚔️ **策略对决** — 最多 10 个策略同场竞技，支持模拟行情与 CoinGecko 历史 / 实时数据
 - 📊 **结果分析** — 收益曲线、资金折线、雷达图、交易分布等多维可视化
-- 🏆 **排行榜** — 比赛结束后自动计算排名、胜率、平均收益
+- 🏆 **排行榜** — 比赛结束后自动计算排名、胜率、平均收益、最大回撤、夏普率
 
 ## 技术栈
 
@@ -44,7 +44,7 @@ python -m venv venv
 source venv/bin/activate
 
 pip install -r requirements.txt
-cp ../.env.example .env
+cp .env.example .env
 uvicorn app.main:app --reload --host 127.0.0.1 --port 9000
 ```
 
@@ -62,7 +62,7 @@ npm run dev
 ### 方式二：Docker Compose（含 PostgreSQL）
 
 ```bash
-cp .env.example .env          # 按需修改
+cp backend/.env.example backend/.env   # 按需修改
 docker compose up -d
 ```
 
@@ -95,19 +95,18 @@ agent-arena/
 │   └── package.json
 ├── docker-compose.yml         # 开发/测试环境
 ├── docker-compose.prod.yml    # 生产环境
-├── .env.example
 └── docs/
     └── development.md         # 开发者文档
 ```
 
 ## 环境变量
 
-复制 `.env.example` 后按需修改关键项：
+参考 `backend/.env.example` 和 `frontend/.env.example`，关键配置项：
 
 | 变量 | 默认值 | 说明 |
 |---|---|---|
 | `DATABASE_URL` | `sqlite:///./data/agent_arena.db` | 数据库连接串 |
-| `SECRET_KEY` | `your-secret-key-...` | JWT 密钥（生产必改） |
+| `SECRET_KEY` | `dev-secret-key-...` | JWT 密鑰（生产必改） |
 | `CORS_ORIGINS` | `["http://localhost:3000"]` | 允许的前端地址 |
 | `PORT` | `9000` | 后端监听端口 |
 | `VITE_API_URL` | `http://localhost:9000` | 前端 API 基础地址 |

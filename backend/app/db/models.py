@@ -111,6 +111,8 @@ class MatchParticipant(Base):
     total_trades: Mapped[int] = mapped_column(Integer, default=0)
     win_trades: Mapped[int] = mapped_column(Integer, default=0)
     rank: Mapped[Optional[int]] = mapped_column(Integer)
+    max_drawdown: Mapped[float] = mapped_column(Float, default=0.0)
+    sharpe_ratio: Mapped[float] = mapped_column(Float, default=0.0)
 
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

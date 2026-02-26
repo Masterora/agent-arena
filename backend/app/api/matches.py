@@ -149,7 +149,9 @@ async def run_match(
                 "return_pct": r.return_pct,
                 "total_trades": r.total_trades,
                 "win_trades": r.win_trades,
-                "rank": r.rank
+                "rank": r.rank,
+                "max_drawdown": r.max_drawdown,
+                "sharpe_ratio": r.sharpe_ratio,
             }
             for r in results
         ]
@@ -215,7 +217,9 @@ async def get_match(
                 "return_pct": p.return_pct,
                 "total_trades": p.total_trades,
                 "win_trades": p.win_trades,
-                "rank": p.rank
+                "rank": p.rank,
+                "max_drawdown": p.max_drawdown,
+                "sharpe_ratio": p.sharpe_ratio,
             }
             for p in db_match.participants
         ]
@@ -266,7 +270,9 @@ async def list_matches(
                     "return_pct": p.return_pct,
                     "total_trades": p.total_trades,
                     "win_trades": p.win_trades,
-                    "rank": p.rank
+                    "rank": p.rank,
+                    "max_drawdown": p.max_drawdown,
+                    "sharpe_ratio": p.sharpe_ratio,
                 }
                 for p in m.participants
             ]

@@ -41,6 +41,8 @@ class MatchResult(BaseModel):
     total_trades: int
     win_trades: int
     rank: int
+    max_drawdown: float = 0.0   # 最大回撤 (%)
+    sharpe_ratio: float = 0.0   # 夏普率
 
 class Match(BaseModel):
     """比赛模型"""

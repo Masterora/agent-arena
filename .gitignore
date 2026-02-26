@@ -16,7 +16,8 @@ ENV/
 *~
 
 # 项目特定
-backend/logs/
+backend/logs/*.log
+backend/logs/*.log.*
 data/market_data/*.csv
 data/match_logs/*.json
 backend/.env
