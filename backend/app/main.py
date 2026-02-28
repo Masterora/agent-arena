@@ -106,4 +106,13 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    """健康检查：含数据库连通性，便于负载均衡/就绪探针"""
+    from app.database import engine
+    from sqlalchemy import text
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        return {"status": "ok"}
+    except Exception as e:
+        logger.warning(f"Health check DB failed: {e}")
+        return JSONResponse(status_code=503, content={"status": "unhealthy", "detail": "数据库不可用"})

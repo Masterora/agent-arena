@@ -4,8 +4,7 @@ import { Button } from "../components/common/Button";
 import { MatchCard } from "../components/match/MatchCard";
 import { RunMatchForm } from "../components/match/RunMatchForm";
 import { Loading } from "../components/common/Loading";
-import { Toast } from "../components/common/Toast";
-import { useToast } from "../hooks/useToast";
+import { useToastContext } from "../contexts/ToastContext";
 import { useMatches, useRunMatch, useDeleteMatch } from "../hooks/useMatches";
 import type { Match, MatchStatus, RunMatchRequest } from "../types/match";
 
@@ -17,7 +16,7 @@ const Matches: React.FC = () => {
   >();
   const [formTitle, setFormTitle] = useState("运行新比赛");
 
-  const { toasts, removeToast, success, error } = useToast();
+  const { success } = useToastContext();
 
   // 数据获取
   const { data: matches = [], isLoading } = useMatches();
@@ -37,9 +36,8 @@ const Matches: React.FC = () => {
       success("比赛已提交，正在后台运行中…");
       setIsFormOpen(false);
       setCloneDefaults(undefined);
-    } catch (err) {
-      error("比赛提交失败，请重试");
-      console.error("运行比赛失败:", err);
+    } catch {
+      // 错误已由 apiClient 拦截器统一 Toast
     }
   };
 
@@ -50,7 +48,7 @@ const Matches: React.FC = () => {
       await deleteMatchMutation.mutateAsync(match.id);
       success("比赛已删除");
     } catch {
-      error("删除失败，请重试");
+      // 错误已由 apiClient 拦截器统一 Toast
     }
   };
 
@@ -69,15 +67,6 @@ const Matches: React.FC = () => {
 
   return (
     <div className="space-y-5">
-      {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          type={toast.type}
-          message={toast.message}
-          onClose={() => removeToast(toast.id)}
-        />
-      ))}
-
       {/* 头部：标题 + 按钮 */}
       <div className="flex items-center justify-between">
         <div>

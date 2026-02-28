@@ -5,8 +5,7 @@ import { Button } from "../components/common/Button";
 import { StrategyList } from "../components/strategy/StrategyList";
 import { StrategyForm } from "../components/strategy/StrategyForm";
 import { StrategyStatsChart } from "../components/strategy/StrategyStatsChart";
-import { Toast } from "../components/common/Toast";
-import { useToast } from "../hooks/useToast";
+import { useToastContext } from "../contexts/ToastContext";
 import {
   useStrategies,
   useCreateStrategy,
@@ -41,7 +40,7 @@ const Strategies: React.FC = () => {
   >();
   const [filterType, setFilterType] = useState<StrategyType | "all">("all");
 
-  const { toasts, removeToast, success, error } = useToast();
+  const { success, error } = useToastContext();
 
   // 数据获取
   const { data: strategies = [], isLoading } = useStrategies();
@@ -67,9 +66,8 @@ const Strategies: React.FC = () => {
       }
       setIsFormOpen(false);
       setEditingStrategy(undefined);
-    } catch (err) {
-      error("操作失败，请重试");
-      console.error("操作失败:", err);
+    } catch {
+      // 错误已由 apiClient 拦截器统一 Toast
     }
   };
 
@@ -79,9 +77,8 @@ const Strategies: React.FC = () => {
       try {
         await deleteMutation.mutateAsync(id);
         success("策略删除成功！");
-      } catch (err) {
-        error("删除失败，请重试");
-        console.error("删除失败:", err);
+      } catch {
+        // 错误已由 apiClient 拦截器统一 Toast
       }
     }
   };
@@ -100,15 +97,6 @@ const Strategies: React.FC = () => {
 
   return (
     <div className="space-y-5">
-      {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          type={toast.type}
-          message={toast.message}
-          onClose={() => removeToast(toast.id)}
-        />
-      ))}
-
       {/* 头部：标题 + 按钮 */}
       <div className="flex items-center justify-between">
         <div>

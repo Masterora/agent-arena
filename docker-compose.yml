@@ -1,3 +1,4 @@
+# 敏感信息通过 .env 配置（可复制 .env.docker.example 为 .env 后修改）
 version: '3.8'
 
 services:
@@ -6,17 +7,15 @@ services:
     image: postgres:16-alpine
     container_name: agent-arena-db
     environment:
-      POSTGRES_USER: agent_arena
-      POSTGRES_PASSWORD: arena_password_2024
-      POSTGRES_DB: agent_arena
+      POSTGRES_USER: ${POSTGRES_USER:-agent_arena}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-arena_password_2024}
+      POSTGRES_DB: ${POSTGRES_DB:-agent_arena}
       POSTGRES_INITDB_ARGS: "-E UTF8 --locale=C"
       TZ: Asia/Shanghai
     ports:
       - "5432:5432"
     volumes:
-      # 数据持久化到 D:\docker-volume
-      - D:\docker-volume\agent-arena\postgres:/var/lib/postgresql/data
-      # 初始化脚本（只读）
+      - ${DOCKER_VOLUME_BASE:-./data/volumes}/agent-arena/postgres:/var/lib/postgresql/data
       - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U agent_arena -d agent_arena"]
@@ -32,12 +31,11 @@ services:
   redis:
     image: redis:7-alpine
     container_name: agent-arena-redis
-    command: redis-server --appendonly yes --requirepass redis_password_2024
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis_password_2024}
     ports:
       - "6379:6379"
     volumes:
-      # Redis 数据持久化
-      - D:\docker-volume\agent-arena\redis:/data
+      - ${DOCKER_VOLUME_BASE:-./data/volumes}/agent-arena/redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
       interval: 10s
@@ -55,21 +53,18 @@ services:
     container_name: agent-arena-backend
     environment:
       - ENV=development
-      - DATABASE_URL=postgresql://agent_arena:arena_password_2024@postgres:5432/agent_arena
-      - REDIS_URL=redis://:redis_password_2024@redis:6379/0
-      - SECRET_KEY=your-super-secret-key-change-in-production
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-agent_arena}:${POSTGRES_PASSWORD:-arena_password_2024}@postgres:5432/${POSTGRES_DB:-agent_arena}
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_password_2024}@redis:6379/0
+      - SECRET_KEY=${SECRET_KEY:-your-super-secret-key-change-in-production}
       - CORS_ORIGINS=["http://localhost:3000","http://localhost:5173"]
       - LOG_LEVEL=INFO
       - DB_ECHO=false
     ports:
       - "9000:9000"
     volumes:
-      # 代码热重载（开发环境）
       - ./backend/app:/app/app:ro
-      # 日志持久化
-      - D:\docker-volume\agent-arena\backend-logs:/app/logs
-      # 数据持久化（SQLite 备份等）
-      - D:\docker-volume\agent-arena\backend-data:/app/data
+      - ${DOCKER_VOLUME_BASE:-./data/volumes}/agent-arena/backend-logs:/app/logs
+      - ${DOCKER_VOLUME_BASE:-./data/volumes}/agent-arena/backend-data:/app/data
     depends_on:
       postgres:
         condition: service_healthy
@@ -85,8 +80,8 @@ services:
     image: dpage/pgadmin4:latest
     container_name: agent-arena-pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@arena.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@arena.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin123}
       PGADMIN_CONFIG_SERVER_MODE: 'False'
       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
     ports:

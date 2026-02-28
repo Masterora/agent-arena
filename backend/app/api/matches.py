@@ -218,7 +218,7 @@ async def get_match(
         db: Session = Depends(get_db)
 ):
     """获取比赛详情"""
-    db_match = MatchCRUD.get(db, match_id)
+    db_match = MatchCRUD.get(db, match_id, load_logs=include_logs)
 
     if not db_match:
         raise HTTPException(status_code=404, detail="比赛不存在")

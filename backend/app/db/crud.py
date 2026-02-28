@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 from sqlalchemy import select, update, delete
 from typing import List, Optional
 from loguru import logger
@@ -162,9 +162,19 @@ class MatchCRUD:
         return db_match
 
     @staticmethod
-    def get(db: Session, match_id: str) -> Optional[models.Match]:
-        """获取比赛"""
-        return db.get(models.Match, match_id)
+    def get(db: Session, match_id: str, load_logs: bool = True) -> Optional[models.Match]:
+        """获取比赛（预加载 participants+strategy，可选 logs，避免 N+1）"""
+        opts = [
+            selectinload(models.Match.participants).selectinload(models.MatchParticipant.strategy),
+        ]
+        if load_logs:
+            opts.append(selectinload(models.Match.logs))
+        stmt = (
+            select(models.Match)
+            .where(models.Match.id == match_id)
+            .options(*opts)
+        )
+        return db.scalars(stmt).one_or_none()
 
     @staticmethod
     def get_all(
@@ -173,15 +183,17 @@ class MatchCRUD:
             limit: int = 100,
             status: Optional[str] = None
     ) -> List[models.Match]:
-        """获取比赛列表"""
-        stmt = select(models.Match)
-
+        """获取比赛列表（预加载 participants+strategy，避免 N+1）"""
+        stmt = (
+            select(models.Match)
+            .options(
+                selectinload(models.Match.participants).selectinload(models.MatchParticipant.strategy),
+            )
+        )
         if status:
             stmt = stmt.where(models.Match.status == status)
-
         stmt = stmt.offset(skip).limit(limit).order_by(models.Match.created_at.desc())
-
-        return list(db.scalars(stmt).all())
+        return list(db.scalars(stmt).unique().all())
 
     @staticmethod
     def update_status(

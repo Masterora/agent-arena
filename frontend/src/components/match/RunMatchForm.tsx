@@ -1,8 +1,9 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Play } from "lucide-react";
 import { Button } from "../common/Button";
 import { StrategyList } from "../strategy/StrategyList";
 import { useStrategies } from "../../hooks/useStrategies";
+import { useToastContext } from "../../contexts/ToastContext";
 import { marketApi } from "../../api/market";
 import styles from "./RunMatchForm.module.css";
 import type {
@@ -28,6 +29,7 @@ export const RunMatchForm: React.FC<RunMatchFormProps> = ({
   title = "运行新比赛",
 }) => {
   const { data: strategies = [] } = useStrategies();
+  const { warning } = useToastContext();
   const [coins, setCoins] = useState<CoinInfo[]>([]);
   const [selectedIds, setSelectedIds] = useState<string[]>(
     defaultValues?.strategy_ids ?? [],
@@ -60,7 +62,7 @@ export const RunMatchForm: React.FC<RunMatchFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedIds.length < 2) {
-      alert("请至少选择 2 个策略");
+      warning("请至少选择 2 个策略");
       return;
     }
     onSubmit({
