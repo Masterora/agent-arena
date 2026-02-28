@@ -11,6 +11,7 @@ Create Date: 2026-02-27
 
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 
 revision = '002'
 down_revision = '001'
@@ -18,18 +19,20 @@ branch_labels = None
 depends_on = None
 
 
-def upgrade() -> None:
-    # match_participants 新增 value_history 列
-    with op.batch_alter_table('match_participants') as batch_op:
-        batch_op.add_column(
-            sa.Column('value_history', sa.JSON(), nullable=True)
-        )
+def _table_columns(conn, table_name: str):
+    return [c["name"] for c in inspect(conn).get_columns(table_name)]
 
-    # matches 新增 error_message 列
-    with op.batch_alter_table('matches') as batch_op:
-        batch_op.add_column(
-            sa.Column('error_message', sa.Text(), nullable=True)
-        )
+
+def upgrade() -> None:
+    conn = op.get_bind()
+    part_cols = _table_columns(conn, 'match_participants')
+    match_cols = _table_columns(conn, 'matches')
+    if 'value_history' not in part_cols:
+        with op.batch_alter_table('match_participants') as batch_op:
+            batch_op.add_column(sa.Column('value_history', sa.JSON(), nullable=True))
+    if 'error_message' not in match_cols:
+        with op.batch_alter_table('matches') as batch_op:
+            batch_op.add_column(sa.Column('error_message', sa.Text(), nullable=True))
 
 
 def downgrade() -> None:
