@@ -88,10 +88,23 @@ async def general_exception_handler(request: Request, exc: Exception):
         f"request_id={request_id} path={request.url.path} error={exc!r}",
         exc_info=True,
     )
+    detail = "服务器内部错误，请稍后重试"
+    status_code = 500
+    # 表结构过期（例如未执行迁移）时给出可操作提示
+    try:
+        from sqlalchemy.exc import OperationalError
+        if isinstance(exc, OperationalError) or "no such column" in str(exc).lower():
+            detail = (
+                "数据库表结构过期。请在后端目录执行: alembic upgrade head ；"
+                "或删除 data/agent_arena.db 后重启服务以重建表（会丢失本地数据）。"
+            )
+            status_code = 503
+    except Exception:
+        pass
     return JSONResponse(
-        status_code=500,
+        status_code=status_code,
         content={
-            "detail": "服务器内部错误，请稍后重试",
+            "detail": detail,
             "request_id": request_id,
         },
     )
