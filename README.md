@@ -25,7 +25,7 @@ Agent Arena 是一个全栈交易策略对抗平台。用户可以创建参数�
 
 ## 快速开始
 
-### 方式一：本地开发（推荐）
+### 方式一：本地开发
 
 **1. 克隆项目**
 ```bash
@@ -48,7 +48,7 @@ cp .env.example .env
 uvicorn app.main:app --reload --host 127.0.0.1 --port 9000
 ```
 
-**3. 前端**（新建终端）
+**3. 前端**
 ```bash
 cd frontend
 npm install
@@ -59,7 +59,7 @@ npm run dev
 
 ---
 
-### 方式二：Docker Compose（含 PostgreSQL）
+### 方式二：Docker Compose
 
 ```bash
 cp backend/.env.example backend/.env   # 按需修改
@@ -76,9 +76,9 @@ pip install -r requirements.txt   # 已含 pytest / pytest-asyncio / pytest-cov
 python -m pytest tests/ -v
 ```
 
-- `tests/test_api_strategies.py` — 策略 API 集成测试（创建/列表/详情/校验）
-- `tests/test_api_matches.py` — 比赛 API 集成测试（运行/列表/参数校验）
-- `tests/test_match_engine.py` — 比赛引擎单元测试（手续费/滑点、初始化、结算、策略注册表）
+- `tests/test_api_strategies.py` — 策略 API 集成测试
+- `tests/test_api_matches.py` — 比赛 API 集成测试
+- `tests/test_match_engine.py` — 比赛引擎单元测试
 
 ## 项目结构
 
@@ -95,14 +95,14 @@ agent-arena/
 │   │   ├── database.py       # 数据库连接
 │   │   └── main.py           # FastAPI 应用入口
 │   ├── alembic/              # 数据库迁移
-│   ├── data/                 # SQLite 数据文件（开发）
+│   ├── data/                 # SQLite 数据文件
 │   ├── logs/                 # 运行日志
 │   ├── tests/                # pytest 集成与单元测试
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
 │   │   ├── api/              # Axios 请求封装
-│   │   ├── components/       # 可复用组件（含 CSS Modules）
+│   │   ├── components/       # 可复用组件
 │   │   ├── hooks/            # React Query 自定义 Hooks
 │   │   ├── pages/            # 页面组件
 │   │   ├── types/            # TypeScript 类型定义
@@ -122,9 +122,9 @@ agent-arena/
 
 - 新建项目 → 选择本仓库
 - **Root Directory** 设为 **`frontend`**
-- Build Command：`npm run build`（默认）
-- Output Directory：`dist`（默认）
-- 安装依赖：`npm install`（默认）
+- Build Command：`npm run build`
+- Output Directory：`dist`
+- 安装依赖：`npm install`
 
 **2. 环境变量**
 
@@ -159,7 +159,7 @@ npm run preview
 | 变量 | 默认值 | 说明 |
 |---|---|---|
 | `DATABASE_URL` | `sqlite:///./data/agent_arena.db` | 数据库连接串 |
-| `SECRET_KEY` | `dev-secret-key-...` | JWT 密鑰（生产必改） |
+| `SECRET_KEY` | `dev-secret-key-...` | JWT 密鑰 |
 | `CORS_ORIGINS` | `["http://localhost:3000"]` | 允许的前端地址 |
 | `PORT` | `9000` | 后端监听端口 |
 | `VITE_API_URL` | `http://localhost:9000` | 前端 API 基础地址 |
