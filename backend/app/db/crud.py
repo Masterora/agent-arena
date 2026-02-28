@@ -141,7 +141,9 @@ class MatchCRUD:
             trading_pair=config["trading_pair"],
             timeframe=config["timeframe"],
             duration_steps=config["duration_steps"],
-            market_type=config.get("market_type")
+            market_type=config.get("market_type"),
+            market_source=config.get("market_source"),
+            coin_id=config.get("coin_id"),
         )
         db.add(db_match)
         db.flush()  # 获取 ID 但不提交

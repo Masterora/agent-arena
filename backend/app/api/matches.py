@@ -233,7 +233,9 @@ async def get_match(
             "trading_pair": db_match.trading_pair,
             "timeframe": db_match.timeframe,
             "duration_steps": db_match.duration_steps,
-            "market_type": db_match.market_type
+            "market_type": db_match.market_type,
+            "market_source": getattr(db_match, "market_source", None),
+            "coin_id": getattr(db_match, "coin_id", None),
         },
         "created_at": db_match.created_at,
         "start_time": db_match.start_time,
@@ -287,7 +289,9 @@ async def list_matches(
                 "trading_pair": m.trading_pair,
                 "timeframe": m.timeframe,
                 "duration_steps": m.duration_steps,
-                "market_type": m.market_type
+                "market_type": m.market_type,
+                "market_source": getattr(m, "market_source", None),
+                "coin_id": getattr(m, "coin_id", None),
             },
             "created_at": m.created_at.isoformat(),
             "start_time": m.start_time.isoformat() if m.start_time else None,

@@ -80,6 +80,8 @@ class Match(Base):
     timeframe: Mapped[str] = mapped_column(String(10), nullable=False)
     duration_steps: Mapped[int] = mapped_column(Integer, nullable=False)
     market_type: Mapped[Optional[str]] = mapped_column(String(20))
+    market_source: Mapped[Optional[str]] = mapped_column(String(30))  # simulated | coingecko_historical | coingecko_realtime
+    coin_id: Mapped[Optional[str]] = mapped_column(String(50))  # CoinGecko 币种 ID，模拟行情时为 None
 
     # 时间
     start_time: Mapped[Optional[datetime]] = mapped_column(DateTime)
