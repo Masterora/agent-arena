@@ -23,6 +23,10 @@ function getErrorMessage(error: unknown): string {
     if (typeof detail === "string") return detail;
     if (Array.isArray(detail)) return "请求参数错误";
     if (detail?.errors) return "请求参数校验失败";
+    // 无 response 多为跨域被拦或断网，便于排查
+    if (!error.response && error.code === "ERR_NETWORK") {
+      return "无法连接接口，请检查 VITE_API_URL 与后端 CORS 配置";
+    }
   }
   return (error as Error)?.message ?? "网络错误，请重试";
 }

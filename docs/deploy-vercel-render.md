@@ -43,7 +43,7 @@
 | Key | Value | 说明 |
 |-----|--------|------|
 | `DATABASE_URL` | （见下方） | 生产必须用 PostgreSQL，Render 可免费创建 |
-| `CORS_ORIGINS` | `["https://你的前端.vercel.app"]` | 换成你真实的 Vercel 域名，可多写几个用逗号隔开 |
+| `CORS_ORIGINS` | `https://你的前端.vercel.app` 或 `["https://a.vercel.app"]` | 支持**逗号分隔**（推荐）或 JSON 数组，多个域名：`https://a.vercel.app,https://b.vercel.app` |
 | `SECRET_KEY` | 自己生成一长串随机字符串 | 生产环境必改，不要用默认值 |
 | `ENV` | `production` | 可选，标识生产 |
 | `DEBUG` | `false` | 可选 |
@@ -56,10 +56,8 @@
 
 **CORS_ORIGINS 格式说明：**
 
-- 必须是一个 **JSON 数组字符串**。
-- 只一个域名示例：`["https://agent-arena.vercel.app"]`
-- 多个域名示例：`["https://agent-arena.vercel.app","https://www.你的域名.com"]`
-- 不要有多余空格或换行，否则可能解析失败。
+- **推荐**：逗号分隔的 URL，例如 `https://agent-arena.vercel.app` 或 `https://a.vercel.app,https://b.vercel.app`（Render 上不会触发 JSON 解析错误）。
+- 也支持 JSON 数组：`["https://agent-arena.vercel.app"]`。
 
 ### 4. 若用 Docker：让后端监听 Render 的 PORT
 
@@ -115,8 +113,10 @@ Render 会分配端口并注入 `PORT`，Docker 方式需要让 uvicorn 使用�
 - 确认 Vercel 的 `VITE_API_URL` 和 Render 服务 URL 完全一致（复制粘贴）。  
 - 确认已 **Redeploy** 前端，而不是只改了环境变量不部署。
 
-**2. CORS 报错**  
-- 检查 Render 的 `CORS_ORIGINS` 是否为合法 JSON 数组，且包含当前访问前端的完整域名（如 `https://xxx.vercel.app`）。
+**2. CORS 报错 / 状态码 200 却显示「无法连接接口」或「网络错误」**  
+- 浏览器里请求显示 200，但前端仍报错，多半是 **CORS**：后端虽然返回了，浏览器以跨域为由不让前端读到响应，axios 会当成网络错误。
+- 处理：在 Render 的 `CORS_ORIGINS` 里填 **当前页面的完整域名**（如 `https://agent-arena-xxx.vercel.app`），不要少写 `https://`、不要多写路径或结尾斜杠；多个域名用 JSON 数组，例如 `["https://a.vercel.app","https://b.vercel.app"]`。
+- 改完环境变量后要在 Render 里 **重新部署** 一次后端。
 
 **3. Render 启动失败 / 数据库连接失败**  
 - 若是 Python 方式，确认 Start Command 里有 `alembic upgrade head` 且 **DATABASE_URL** 已填。  

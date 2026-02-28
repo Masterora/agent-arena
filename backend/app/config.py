@@ -1,7 +1,23 @@
 from pydantic_settings import BaseSettings
 from pydantic import computed_field
-from typing import Optional, List
+from typing import Optional, List, Union
 import json
+
+
+def _parse_cors_origins(v: Union[str, List[str], None]) -> List[str]:
+    """支持 JSON 数组或逗号分隔的 URL 字符串，便于在 Render 等平台配置"""
+    if v is None or (isinstance(v, str) and not v.strip()):
+        return ["http://localhost:3000", "http://localhost:5173"]
+    if isinstance(v, list):
+        return [str(x).strip() for x in v if str(x).strip()]
+    s = v.strip()
+    if s.startswith("["):
+        try:
+            out = json.loads(s)
+            return [str(x).strip() for x in out if str(x).strip()]
+        except json.JSONDecodeError:
+            pass
+    return [x.strip() for x in s.split(",") if x.strip()]
 
 
 class Settings(BaseSettings):
@@ -32,8 +48,13 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
 
-    # CORS 配置
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:5173"]
+    # CORS 配置：环境变量为字符串，支持 JSON 数组或逗号分隔的 URL，避免 Render 等平台 JSON 解析失败
+    cors_origins: str = "http://localhost:3000,http://localhost:5173"
+
+    @computed_field
+    @property
+    def cors_origins_list(self) -> List[str]:
+        return _parse_cors_origins(self.cors_origins)
 
     # 对象存储（可选）
     use_object_storage: bool = False
