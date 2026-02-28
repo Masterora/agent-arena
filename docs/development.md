@@ -23,6 +23,8 @@
 6. [数据库迁移](#6-数据库迁移)
 7. [部署](#7-部署)
 8. [开发规范](#8-开发规范)
+9. [手续费与滑点](#9-手续费与滑点)
+10. [测试](#10-测试)
 
 ---
 
@@ -561,3 +563,108 @@ npm run preview      # 预览构建产物
 - 样式：组件级样式用 CSS Module，跨组件工具类用 `index.css` 的全局类，布局微调用内联 Tailwind
 - `@apply` 中只使用 Tailwind 内置类（需要自定义类的地方展开写）
 - 新增类型在 `types/` 对应文件中扩展，保持与后端 Pydantic 模型同步
+
+---
+
+## 9. 手续费与滑点
+
+比赛引擎在每次**买入**和**卖出**时会按配置扣除手续费并模拟滑点，使回测更贴近实盘。
+
+### 配置项（`app/config.py`）
+
+| 配置 | 默认值 | 说明 |
+|------|--------|------|
+| `fee_rate` | `0.002` | 手续费率，如 0.002 表示 0.2%（买卖均按成交金额比例扣除） |
+| `slippage_rate` | `0.001` | 滑点率，如 0.001 表示 0.1%（买入少得数量、卖出少得金额） |
+
+可通过环境变量覆盖（与 pydantic-settings 一致）：
+
+```env
+FEE_RATE=0.003
+SLIPPAGE_RATE=0.0005
+```
+
+### 逻辑说明
+
+- **买入**：先按 `amount * fee_rate`、`amount * slippage_rate` 扣减，再用剩余金额除以价格得到实际买入数量；现金减少的仍是「指令金额」`amount`。
+- **卖出**：按「卖出收入」`revenue = quantity * price` 扣手续费与滑点，现金增加 `revenue - fee - slippage`。
+
+### 单测或特殊回测时覆盖
+
+若需要在某次运行中临时使用不同费率（例如零手续费做对比），可在创建引擎时传入：
+
+```python
+from app.core.match_engine import MatchEngine
+from app.models.match import MatchConfig
+
+config = MatchConfig(initial_capital=10000, trading_pair="ETH/USDC", timeframe="5m", duration_steps=100)
+engine = MatchEngine(config, fee_rate=0.0, slippage_rate=0.0)  # 覆盖为 0
+```
+
+未传 `fee_rate` / `slippage_rate` 时，引擎会从 `app.config.settings` 读取上述配置。
+
+---
+
+## 10. 测试
+
+后端使用 **pytest**，测试使用内存 SQLite（`DATABASE_URL=sqlite:///:memory:`），无需启动服务或依赖外部数据库。
+
+### 运行方式
+
+```bash
+cd backend
+pip install -r requirements.txt   # 已含 pytest、pytest-asyncio、pytest-cov
+python -m pytest tests/ -v
+```
+
+常用选项：
+
+- `-v`：详细输出
+- `-k "test_engine"`：只跑名称包含 `test_engine` 的用例
+- `--tb=short`：短堆栈
+- `--cov=app`：生成覆盖率（需 pytest-cov）
+
+### 测试结构（`backend/tests/`）
+
+| 文件 | 说明 |
+|------|------|
+| `conftest.py` | 测试前设置 `DATABASE_URL`，提供 `client`（TestClient）、`db_clean`（每用例清表） |
+| `test_api_strategies.py` | 策略 API：创建、列表、按 id 获取、404、请求体验证 422 |
+| `test_api_matches.py` | 比赛 API：运行返回 pending、列表、strategy_ids 不足 2 个时 422 |
+| `test_match_engine.py` | 引擎单元：手续费/滑点生效、初始化、finalize 排名与字段、策略注册表 |
+
+### 如何新增 API 集成测试
+
+1. 在 `tests/test_api_*.py` 中新增 `def test_xxx(client: TestClient):`。
+2. 使用 `client.get/post/put/delete(...)` 调用接口，用 `assert response.status_code`、`response.json()` 做断言。
+3. 每个用例前会自动清空表（`db_clean`），互不干扰。
+
+示例：
+
+```python
+def test_delete_strategy(client: TestClient):
+    r = client.post("/api/strategies/", json={...})
+    sid = r.json()["id"]
+    r2 = client.delete(f"/api/strategies/{sid}")
+    assert r2.status_code == 200
+    assert client.get(f"/api/strategies/{sid}").status_code == 404
+```
+
+### 如何新增引擎 / 策略单元测试
+
+1. 在 `tests/test_match_engine.py`（或新建 `test_strategies.py`）中写用例。
+2. 不经过 HTTP，直接构造 `MatchConfig`、`Strategy`、`MatchEngine`，调用 `initialize_match`、`execute_step`、`finalize_match`。
+3. 断言 `engine.portfolios[...].cash`、`positions`、`value_history` 或 `results` 的字段。
+
+示例（验证手续费导致持仓变少）：
+
+```python
+def test_my_fee_logic():
+    from app.core.match_engine import MatchEngine
+    from app.models.match import MatchConfig
+    from app.models.strategy import Strategy, StrategyType, StrategyParams
+    # 构造 config + 策略，engine_fee=0 与 engine_fee=0.1 各跑一步
+    # 比较 engine.portfolios["s1"].positions["ETH"]
+```
+
+策略类可直接 `from app.strategies.templates import MeanReversionStrategy`，构造后调用 `decide(market_data, step)` 断言返回的 `Action`。
