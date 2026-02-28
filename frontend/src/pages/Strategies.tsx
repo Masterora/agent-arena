@@ -42,7 +42,7 @@ const Strategies: React.FC = () => {
   const [filterType, setFilterType] = useState<StrategyType | "all">("all");
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
-  const { success, error } = useToastContext();
+  const { success } = useToastContext();
 
   // 数据获取
   const { data: strategies = [], isLoading } = useStrategies();
