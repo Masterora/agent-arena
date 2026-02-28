@@ -1,7 +1,9 @@
 import React from "react";
 import type { Strategy } from "../../types/strategy";
 import { StrategyCard } from "./StrategyCard";
+import { Button } from "../common/Button";
 import { Loading } from "../common/Loading";
+import { Plus } from "lucide-react";
 import styles from "./StrategyList.module.css";
 
 interface StrategyListProps {
@@ -11,6 +13,8 @@ interface StrategyListProps {
   onEdit?: (strategy: Strategy) => void;
   onSelect?: (strategy: Strategy) => void;
   selectedIds?: string[];
+  /** 空状态时点击「创建策略」的回调，不传则只显示文案 */
+  onEmptyAction?: () => void;
 }
 
 export const StrategyList: React.FC<StrategyListProps> = ({
@@ -20,6 +24,7 @@ export const StrategyList: React.FC<StrategyListProps> = ({
   onEdit,
   onSelect,
   selectedIds = [],
+  onEmptyAction,
 }) => {
   if (isLoading) {
     return <Loading />;
@@ -35,7 +40,15 @@ export const StrategyList: React.FC<StrategyListProps> = ({
           </svg>
         </div>
         <h3 className={styles.emptyTitle}>暂无策略</h3>
-        <p className={styles.emptyHint}>点击上方按钮创建你的第一个策略</p>
+        <p className={styles.emptyHint}>
+          {onEmptyAction ? "创建你的第一个策略，开始参与比赛" : "点击上方按钮创建你的第一个策略"}
+        </p>
+        {onEmptyAction && (
+          <Button onClick={onEmptyAction} className="btn-primary mt-4">
+            <Plus className="h-4 w-4 mr-2" />
+            创建策略
+          </Button>
+        )}
       </div>
     );
   }

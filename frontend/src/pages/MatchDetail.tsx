@@ -163,7 +163,7 @@ const MatchDetail: React.FC = () => {
             <h2 className="text-lg font-semibold text-gradient mb-4">
               比赛配置
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <div className="form-section">
                 <div className="text-sm text-slate-400 mb-2">初始资金</div>
                 <div className="text-lg font-semibold text-slate-100">
