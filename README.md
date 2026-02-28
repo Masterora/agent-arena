@@ -114,6 +114,44 @@ agent-arena/
     └── development.md         # 开发者文档
 ```
 
+## 部署到 Vercel（前端）
+
+前端可单独部署到 Vercel，后端需部署到其他服务（如 Railway、Render、Fly.io）并配置 CORS。
+
+**1. 在 Vercel 中导入本仓库**
+
+- 新建项目 → 选择本仓库
+- **Root Directory** 设为 **`frontend`**
+- Build Command：`npm run build`（默认）
+- Output Directory：`dist`（默认）
+- 安装依赖：`npm install`（默认）
+
+**2. 环境变量**
+
+在 Vercel 项目 → Settings → Environment Variables 中添加：
+
+| 变量 | 说明 |
+|------|------|
+| `VITE_API_URL` | 生产环境后端地址，如 `https://your-backend.railway.app` 或 `https://api.yourdomain.com` |
+
+构建时 Vite 会将该值打入前端，请求会发往该地址。
+
+**3. 后端与 CORS**
+
+- 将后端部署到任意支持 Python 的平台，并设置 `CORS_ORIGINS` 包含你的 Vercel 域名，例如：  
+  `["https://your-app.vercel.app"]`
+- 若前后端同域（例如用 Nginx 反向代理），可将 `VITE_API_URL` 留空或设为相对路径 `/api`，由 Nginx 转发到后端。
+
+**4. 本地预览构建**
+
+```bash
+cd frontend
+npm run build
+npm run preview
+```
+
+---
+
 ## 环境变量
 
 参考 `backend/.env.example` 和 `frontend/.env.example`，关键配置项：
