@@ -18,18 +18,25 @@ STRATEGY_CLASSES = {
 
 
 class MatchEngine:
-    """比赛执行引擎"""
+    """比赛执行引擎（手续费与滑点从配置读取，回测更贴近实盘）"""
 
-    def __init__(self, match_config: MatchConfig):
+    def __init__(
+        self,
+        match_config: MatchConfig,
+        *,
+        fee_rate: Optional[float] = None,
+        slippage_rate: Optional[float] = None,
+    ):
         self.config = match_config
         self.portfolios: Dict[str, Portfolio] = {}
         self.strategies_instances = {}
-        # 每步资产价值序列，用于计算回撤和夏普率
         self.value_history: Dict[str, List[float]] = {}
-        # 每个策略各资产的加权平均成本
         self.cost_basis: Dict[str, Dict[str, float]] = {}
-        # 已盈利的卖出笔数
         self.win_trade_count: Dict[str, int] = {}
+        # 手续费率（如 0.002 = 0.2%）、滑点率（如 0.001 = 0.1%），未传则从配置读取
+        from app.config import settings
+        self.fee_rate = fee_rate if fee_rate is not None else getattr(settings, "fee_rate", 0.002)
+        self.slippage_rate = slippage_rate if slippage_rate is not None else getattr(settings, "slippage_rate", 0.001)
 
     def initialize_match(self, strategies: List[Strategy]) -> Match:
         """初始化比赛"""
@@ -176,8 +183,8 @@ class MatchEngine:
         if action.amount < 10:
             return
 
-        fee = action.amount * 0.002
-        slippage = action.amount * 0.001
+        fee = action.amount * self.fee_rate
+        slippage = action.amount * self.slippage_rate
         actual_spend = action.amount - fee - slippage
         quantity = actual_spend / price
 
@@ -222,8 +229,8 @@ class MatchEngine:
             self.win_trade_count[strategy_id] += 1
 
         revenue = quantity * price
-        fee = revenue * 0.002
-        slippage = revenue * 0.001
+        fee = revenue * self.fee_rate
+        slippage = revenue * self.slippage_rate
         actual_revenue = revenue - fee - slippage
 
         portfolio.cash += actual_revenue

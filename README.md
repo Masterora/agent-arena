@@ -66,6 +66,20 @@ cp backend/.env.example backend/.env   # 按需修改
 docker compose up -d
 ```
 
+### 运行测试
+
+后端使用 pytest，测试使用内存 SQLite，无需启动服务：
+
+```bash
+cd backend
+pip install -r requirements.txt   # 已含 pytest / pytest-asyncio / pytest-cov
+python -m pytest tests/ -v
+```
+
+- `tests/test_api_strategies.py` — 策略 API 集成测试（创建/列表/详情/校验）
+- `tests/test_api_matches.py` — 比赛 API 集成测试（运行/列表/参数校验）
+- `tests/test_match_engine.py` — 比赛引擎单元测试（手续费/滑点、初始化、结算、策略注册表）
+
 ## 项目结构
 
 ```
@@ -83,6 +97,7 @@ agent-arena/
 │   ├── alembic/              # 数据库迁移
 │   ├── data/                 # SQLite 数据文件（开发）
 │   ├── logs/                 # 运行日志
+│   ├── tests/                # pytest 集成与单元测试
 │   └── requirements.txt
 ├── frontend/
 │   ├── src/
