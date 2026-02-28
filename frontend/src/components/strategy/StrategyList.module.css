@@ -1,6 +1,6 @@
-﻿@reference "../../index.css";
+@reference "../../index.css";
 .grid {
-  @apply grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6;
+  @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6;
 }
 .empty {
   @apply bg-black rounded-2xl border border-slate-800 p-6 md:p-8

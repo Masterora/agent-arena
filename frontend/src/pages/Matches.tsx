@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { Play, Filter } from "lucide-react";
 import { Button } from "../components/common/Button";
+import { ConfirmModal } from "../components/common/ConfirmModal";
 import { MatchCard } from "../components/match/MatchCard";
 import { RunMatchForm } from "../components/match/RunMatchForm";
 import { Loading } from "../components/common/Loading";
-import { Toast } from "../components/common/Toast";
-import { useToast } from "../hooks/useToast";
+import { useToastContext } from "../contexts/ToastContext";
 import { useMatches, useRunMatch, useDeleteMatch } from "../hooks/useMatches";
 import type { Match, MatchStatus, RunMatchRequest } from "../types/match";
 
@@ -16,8 +16,9 @@ const Matches: React.FC = () => {
     Partial<RunMatchRequest> | undefined
   >();
   const [formTitle, setFormTitle] = useState("运行新比赛");
+  const [deleteTargetMatch, setDeleteTargetMatch] = useState<Match | null>(null);
 
-  const { toasts, removeToast, success, error } = useToast();
+  const { success } = useToastContext();
 
   // 数据获取
   const { data: matches = [], isLoading } = useMatches();
@@ -37,29 +38,32 @@ const Matches: React.FC = () => {
       success("比赛已提交，正在后台运行中…");
       setIsFormOpen(false);
       setCloneDefaults(undefined);
-    } catch (err) {
-      error("比赛提交失败，请重试");
-      console.error("运行比赛失败:", err);
-    }
-  };
-
-  // 处理删除比赛
-  const handleDeleteMatch = async (match: Match) => {
-    if (!window.confirm(`确定要删除这场比赛吗？`)) return;
-    try {
-      await deleteMatchMutation.mutateAsync(match.id);
-      success("比赛已删除");
     } catch {
-      error("删除失败，请重试");
+      // 错误已由 apiClient 拦截器统一 Toast
     }
   };
 
-  // 处理复制比赛配置编辑
+  const handleDeleteMatchClick = (match: Match) => setDeleteTargetMatch(match);
+
+  const handleDeleteMatchConfirm = async () => {
+    if (!deleteTargetMatch) return;
+    try {
+      await deleteMatchMutation.mutateAsync(deleteTargetMatch.id);
+      success("比赛已删除");
+      setDeleteTargetMatch(null);
+    } catch {
+      setDeleteTargetMatch(null);
+    }
+  };
+
+  // 处理复制比赛配置编辑（含 market_source / coin_id）
   const handleEditMatch = (match: Match) => {
     const strategyIds = (match.participants ?? []).map((p) => p.strategy_id);
     setCloneDefaults({
       strategy_ids: strategyIds,
       market_type: match.config?.market_type ?? "random",
+      market_source: match.config?.market_source ?? "simulated",
+      coin_id: match.config?.coin_id ?? "ethereum",
       duration_steps: match.config?.duration_steps ?? 100,
       initial_capital: match.config?.initial_capital ?? 10000,
     });
@@ -69,15 +73,6 @@ const Matches: React.FC = () => {
 
   return (
     <div className="space-y-5">
-      {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          type={toast.type}
-          message={toast.message}
-          onClose={() => removeToast(toast.id)}
-        />
-      ))}
-
       {/* 头部：标题 + 按钮 */}
       <div className="flex items-center justify-between">
         <div>
@@ -120,7 +115,7 @@ const Matches: React.FC = () => {
           <button
             key={key}
             onClick={() => setFilterStatus(key)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 focus-ring ${
               filterStatus === key
                 ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/40"
                 : "bg-slate-800 text-slate-300 hover:bg-slate-700"
@@ -180,12 +175,24 @@ const Matches: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredMatches.map((match) => (
-            <MatchCard key={match.id} match={match} onEdit={handleEditMatch} onDelete={handleDeleteMatch} />
+            <MatchCard key={match.id} match={match} onEdit={handleEditMatch} onDelete={handleDeleteMatchClick} />
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        open={deleteTargetMatch !== null}
+        title="删除比赛"
+        message="确定要删除这场比赛吗？删除后无法恢复。"
+        confirmLabel="删除"
+        cancelLabel="取消"
+        variant="danger"
+        onConfirm={handleDeleteMatchConfirm}
+        onCancel={() => setDeleteTargetMatch(null)}
+        isLoading={deleteMatchMutation.isPending}
+      />
 
       {/* 运行比赛表单弹窗 */}
       {isFormOpen && (

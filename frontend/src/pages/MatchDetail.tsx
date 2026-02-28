@@ -20,11 +20,38 @@ import { PortfolioValueChart } from "../components/charts/PortfolioValueChart";
 
 const MatchDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { data: match, isLoading } = useMatch(id!, true);
+  const { data: match, isLoading, isError, refetch } = useMatch(id ?? "", true);
   const [activeTab, setActiveTab] = useState<"overview" | "charts">("overview");
+
+  if (!id) {
+    return (
+      <div className="card text-center py-12">
+        <h2 className="text-2xl font-bold text-slate-100 mb-2">请从比赛列表选择一场比赛</h2>
+        <Link to="/matches">
+          <Button variant="secondary">返回比赛列表</Button>
+        </Link>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return <Loading />;
+  }
+
+  if (isError) {
+    return (
+      <div className="card text-center py-12">
+        <h2 className="text-2xl font-bold text-slate-100 mb-2">加载失败，请重试</h2>
+        <div className="flex gap-3 justify-center mt-4">
+          <Button variant="primary" onClick={() => refetch()}>
+            重试
+          </Button>
+          <Link to="/matches">
+            <Button variant="secondary">返回比赛列表</Button>
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   if (!match) {
@@ -136,7 +163,7 @@ const MatchDetail: React.FC = () => {
             <h2 className="text-lg font-semibold text-gradient mb-4">
               比赛配置
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <div className="form-section">
                 <div className="text-sm text-slate-400 mb-2">初始资金</div>
                 <div className="text-lg font-semibold text-slate-100">

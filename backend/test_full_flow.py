@@ -1,4 +1,5 @@
 """完整流程测试"""
+import os
 import sys
 from pathlib import Path
 
@@ -8,7 +9,8 @@ import requests
 import json
 from loguru import logger
 
-BASE_URL = "http://localhost:8000"
+# 与 README 一致：后端默认 9000，可通过环境变量覆盖
+BASE_URL = os.environ.get("AGENT_ARENA_API_URL", "http://localhost:9000")
 
 
 def test_full_flow():

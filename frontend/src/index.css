@@ -82,8 +82,9 @@
   .btn {
     @apply px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-200
            active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2
+           focus-visible:ring-2 focus-visible:ring-offset-2
            cursor-pointer inline-flex items-center gap-2;
-    focus-ring-offset-color: #060912;
+    --tw-ring-offset-color: #060912;
   }
 
   .btn-primary {
@@ -127,7 +128,9 @@
   /* ── 标签页 ──────────────────────────────── */
   .tab-button {
     @apply px-5 py-3 text-sm font-medium transition-all duration-200
-           relative text-slate-500 hover:text-slate-200;
+           relative text-slate-500 hover:text-slate-200
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2;
+    --tw-ring-offset-color: #060912;
   }
 
   .tab-button.active {
@@ -245,4 +248,10 @@
 
   .grid-cards      { @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5; }
   .grid-cards-wide { @apply grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5; }
+
+  /* 键盘 / 无障碍：仅键盘聚焦时显示焦点环 */
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500/50 focus-visible:ring-offset-2;
+    --tw-ring-offset-color: #060912;
+  }
 }

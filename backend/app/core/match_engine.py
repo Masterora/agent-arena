@@ -9,20 +9,34 @@ from app.models.portfolio import Portfolio
 from app.models.strategy import Strategy
 from app.strategies.templates import MeanReversionStrategy, MomentumStrategy, DCAStrategy
 
+# 策略类型 → 策略类，新增策略时只需在此注册
+STRATEGY_CLASSES = {
+    "mean_reversion": MeanReversionStrategy,
+    "momentum": MomentumStrategy,
+    "dca": DCAStrategy,
+}
+
 
 class MatchEngine:
-    """比赛执行引擎"""
+    """比赛执行引擎（手续费与滑点从配置读取，回测更贴近实盘）"""
 
-    def __init__(self, match_config: MatchConfig):
+    def __init__(
+        self,
+        match_config: MatchConfig,
+        *,
+        fee_rate: Optional[float] = None,
+        slippage_rate: Optional[float] = None,
+    ):
         self.config = match_config
         self.portfolios: Dict[str, Portfolio] = {}
         self.strategies_instances = {}
-        # 每步资产价值序列，用于计算回撤和夏普率
         self.value_history: Dict[str, List[float]] = {}
-        # 每个策略各资产的加权平均成本
         self.cost_basis: Dict[str, Dict[str, float]] = {}
-        # 已盈利的卖出笔数
         self.win_trade_count: Dict[str, int] = {}
+        # 手续费率（如 0.002 = 0.2%）、滑点率（如 0.001 = 0.1%），未传则从配置读取
+        from app.config import settings
+        self.fee_rate = fee_rate if fee_rate is not None else getattr(settings, "fee_rate", 0.002)
+        self.slippage_rate = slippage_rate if slippage_rate is not None else getattr(settings, "slippage_rate", 0.001)
 
     def initialize_match(self, strategies: List[Strategy]) -> Match:
         """初始化比赛"""
@@ -47,24 +61,12 @@ class MatchEngine:
             self.cost_basis[strategy.id] = {}
             self.win_trade_count[strategy.id] = 0
 
-            # 实例化策略
-            if strategy.type == "mean_reversion":
-                strategy_instance = MeanReversionStrategy(
-                    strategy.id,
-                    strategy.params.model_dump()
-                )
-            elif strategy.type == "momentum":
-                strategy_instance = MomentumStrategy(
-                    strategy.id,
-                    strategy.params.model_dump()
-                )
-            elif strategy.type == "dca":
-                strategy_instance = DCAStrategy(
-                    strategy.id,
-                    strategy.params.model_dump()
-                )
-            else:
+            # 实例化策略（通过注册表，便于扩展）
+            try:
+                strategy_cls = STRATEGY_CLASSES[strategy.type]
+            except KeyError:
                 raise ValueError(f"不支持的策略类型: {strategy.type}")
+            strategy_instance = strategy_cls(strategy.id, strategy.params.model_dump())
 
             strategy_instance.set_portfolio(portfolio)
             self.strategies_instances[strategy.id] = strategy_instance
@@ -181,8 +183,8 @@ class MatchEngine:
         if action.amount < 10:
             return
 
-        fee = action.amount * 0.002
-        slippage = action.amount * 0.001
+        fee = action.amount * self.fee_rate
+        slippage = action.amount * self.slippage_rate
         actual_spend = action.amount - fee - slippage
         quantity = actual_spend / price
 
@@ -227,8 +229,8 @@ class MatchEngine:
             self.win_trade_count[strategy_id] += 1
 
         revenue = quantity * price
-        fee = revenue * 0.002
-        slippage = revenue * 0.001
+        fee = revenue * self.fee_rate
+        slippage = revenue * self.slippage_rate
         actual_revenue = revenue - fee - slippage
 
         portfolio.cash += actual_revenue

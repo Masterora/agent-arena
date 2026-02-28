@@ -6,6 +6,7 @@ export const useMatches = () => {
   return useQuery({
     queryKey: ["matches"],
     queryFn: matchesApi.getAll,
+    staleTime: 30_000, // 无进行中比赛时 30 秒内不重复请求
     refetchInterval: (query) => {
       const data = query.state.data;
       return Array.isArray(data) &&

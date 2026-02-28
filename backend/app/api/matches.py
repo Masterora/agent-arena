@@ -14,6 +14,49 @@ from app.core.market_data import MarketDataGenerator, CoinGeckoFetcher
 router = APIRouter()
 
 
+def _match_to_response(db_match, *, include_logs: bool = False):
+    """统一比赛序列化，供 get_match / list_matches 复用。"""
+    participants = [
+        {
+            "strategy_id": p.strategy_id,
+            "strategy_name": p.strategy.name if p.strategy else None,
+            "final_value": p.final_value,
+            "return_pct": p.return_pct,
+            "total_trades": p.total_trades,
+            "win_trades": p.win_trades,
+            "rank": p.rank,
+            "max_drawdown": p.max_drawdown,
+            "sharpe_ratio": p.sharpe_ratio,
+            "value_history": p.value_history or [],
+        }
+        for p in db_match.participants
+    ]
+    result = {
+        "id": db_match.id,
+        "status": db_match.status,
+        "error_message": db_match.error_message,
+        "config": {
+            "initial_capital": db_match.initial_capital,
+            "trading_pair": db_match.trading_pair,
+            "timeframe": db_match.timeframe,
+            "duration_steps": db_match.duration_steps,
+            "market_type": db_match.market_type,
+            "market_source": getattr(db_match, "market_source", None),
+            "coin_id": getattr(db_match, "coin_id", None),
+        },
+        "created_at": db_match.created_at,
+        "start_time": db_match.start_time,
+        "end_time": db_match.end_time,
+        "participants": participants,
+    }
+    if include_logs and getattr(db_match, "logs", None):
+        result["logs"] = [
+            {"step": log.step, "data": log.data}
+            for log in sorted(db_match.logs, key=lambda x: x.step)
+        ]
+    return result
+
+
 class RunMatchRequest(BaseModel):
     """运行比赛请求"""
     strategy_ids: List[str] = Field(..., min_length=2, max_length=10)
@@ -218,54 +261,10 @@ async def get_match(
         db: Session = Depends(get_db)
 ):
     """获取比赛详情"""
-    db_match = MatchCRUD.get(db, match_id)
-
+    db_match = MatchCRUD.get(db, match_id, load_logs=include_logs)
     if not db_match:
         raise HTTPException(status_code=404, detail="比赛不存在")
-
-    # 构建返回数据
-    result = {
-        "id": db_match.id,
-        "status": db_match.status,
-        "error_message": db_match.error_message,
-        "config": {
-            "initial_capital": db_match.initial_capital,
-            "trading_pair": db_match.trading_pair,
-            "timeframe": db_match.timeframe,
-            "duration_steps": db_match.duration_steps,
-            "market_type": db_match.market_type
-        },
-        "created_at": db_match.created_at,
-        "start_time": db_match.start_time,
-        "end_time": db_match.end_time,
-        "participants": [
-            {
-                "strategy_id": p.strategy_id,
-                "strategy_name": p.strategy.name if p.strategy else None,
-                "final_value": p.final_value,
-                "return_pct": p.return_pct,
-                "total_trades": p.total_trades,
-                "win_trades": p.win_trades,
-                "rank": p.rank,
-                "max_drawdown": p.max_drawdown,
-                "sharpe_ratio": p.sharpe_ratio,
-                "value_history": p.value_history or [],
-            }
-            for p in db_match.participants
-        ]
-    }
-
-    # 可选：包含执行日志
-    if include_logs and db_match.logs:
-        result["logs"] = [
-            {
-                "step": log.step,
-                "data": log.data
-            }
-            for log in sorted(db_match.logs, key=lambda x: x.step)
-        ]
-
-    return result
+    return _match_to_response(db_match, include_logs=include_logs)
 
 @router.get("/")
 async def list_matches(
@@ -276,38 +275,12 @@ async def list_matches(
 ):
     """获取比赛列表"""
     db_matches = MatchCRUD.get_all(db, skip=skip, limit=limit, status=status)
-
-    return [
-        {
-            "id": m.id,
-            "status": m.status,
-            "error_message": m.error_message,
-            "config": {
-                "initial_capital": m.initial_capital,
-                "trading_pair": m.trading_pair,
-                "timeframe": m.timeframe,
-                "duration_steps": m.duration_steps,
-                "market_type": m.market_type
-            },
-            "created_at": m.created_at.isoformat(),
-            "start_time": m.start_time.isoformat() if m.start_time else None,
-            "end_time": m.end_time.isoformat() if m.end_time else None,
-            "participants_count": len(m.participants),
-            "participants": [
-                {
-                    "strategy_id": p.strategy_id,
-                    "strategy_name": p.strategy.name if p.strategy else None,
-                    "final_value": p.final_value,
-                    "return_pct": p.return_pct,
-                    "total_trades": p.total_trades,
-                    "win_trades": p.win_trades,
-                    "rank": p.rank,
-                    "max_drawdown": p.max_drawdown,
-                    "sharpe_ratio": p.sharpe_ratio,
-                    "value_history": p.value_history or [],
-                }
-                for p in m.participants
-            ]
-        }
-        for m in db_matches
-    ]
+    out = []
+    for m in db_matches:
+        r = _match_to_response(m, include_logs=False)
+        r["created_at"] = m.created_at.isoformat()
+        r["start_time"] = m.start_time.isoformat() if m.start_time else None
+        r["end_time"] = m.end_time.isoformat() if m.end_time else None
+        r["participants_count"] = len(m.participants)
+        out.append(r)
+    return out

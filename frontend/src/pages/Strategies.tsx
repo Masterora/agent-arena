@@ -2,11 +2,11 @@ import React, { useState, useRef, useEffect } from "react";
 import { Plus, Filter } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { Button } from "../components/common/Button";
+import { ConfirmModal } from "../components/common/ConfirmModal";
 import { StrategyList } from "../components/strategy/StrategyList";
 import { StrategyForm } from "../components/strategy/StrategyForm";
 import { StrategyStatsChart } from "../components/strategy/StrategyStatsChart";
-import { Toast } from "../components/common/Toast";
-import { useToast } from "../hooks/useToast";
+import { useToastContext } from "../contexts/ToastContext";
 import {
   useStrategies,
   useCreateStrategy,
@@ -40,8 +40,9 @@ const Strategies: React.FC = () => {
     Strategy | undefined
   >();
   const [filterType, setFilterType] = useState<StrategyType | "all">("all");
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
-  const { toasts, removeToast, success, error } = useToast();
+  const { success, error } = useToastContext();
 
   // 数据获取
   const { data: strategies = [], isLoading } = useStrategies();
@@ -67,22 +68,21 @@ const Strategies: React.FC = () => {
       }
       setIsFormOpen(false);
       setEditingStrategy(undefined);
-    } catch (err) {
-      error("操作失败，请重试");
-      console.error("操作失败:", err);
+    } catch {
+      // 错误已由 apiClient 拦截器统一 Toast
     }
   };
 
-  // 处理删除
-  const handleDelete = async (id: string) => {
-    if (window.confirm("确定要删除这个策略吗？")) {
-      try {
-        await deleteMutation.mutateAsync(id);
-        success("策略删除成功！");
-      } catch (err) {
-        error("删除失败，请重试");
-        console.error("删除失败:", err);
-      }
+  const handleDeleteClick = (id: string) => setDeleteTargetId(id);
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteTargetId) return;
+    try {
+      await deleteMutation.mutateAsync(deleteTargetId);
+      success("策略删除成功！");
+      setDeleteTargetId(null);
+    } catch {
+      setDeleteTargetId(null);
     }
   };
 
@@ -100,15 +100,6 @@ const Strategies: React.FC = () => {
 
   return (
     <div className="space-y-5">
-      {toasts.map((toast) => (
-        <Toast
-          key={toast.id}
-          type={toast.type}
-          message={toast.message}
-          onClose={() => removeToast(toast.id)}
-        />
-      ))}
-
       {/* 头部：标题 + 按钮 */}
       <div className="flex items-center justify-between">
         <div>
@@ -156,7 +147,7 @@ const Strategies: React.FC = () => {
           <button
             key={key}
             onClick={() => setFilterType(key)}
-            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 focus-ring ${
               filterType === key
                 ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/40"
                 : "bg-slate-800 text-slate-300 hover:bg-slate-700"
@@ -219,10 +210,23 @@ const Strategies: React.FC = () => {
         <StrategyList
           strategies={filteredStrategies}
           isLoading={isLoading}
-          onDelete={handleDelete}
+          onDelete={handleDeleteClick}
           onEdit={handleEdit}
+          onEmptyAction={() => setIsFormOpen(true)}
         />
       </div>
+
+      <ConfirmModal
+        open={deleteTargetId !== null}
+        title="删除策略"
+        message="删除后无法恢复，确定要删除这个策略吗？"
+        confirmLabel="删除"
+        cancelLabel="取消"
+        variant="danger"
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteTargetId(null)}
+        isLoading={deleteMutation.isPending}
+      />
 
       {/* 创建/编辑表单弹窗 */}
       {isFormOpen && (
