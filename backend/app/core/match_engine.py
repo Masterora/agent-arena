@@ -9,6 +9,13 @@ from app.models.portfolio import Portfolio
 from app.models.strategy import Strategy
 from app.strategies.templates import MeanReversionStrategy, MomentumStrategy, DCAStrategy
 
+# 策略类型 → 策略类，新增策略时只需在此注册
+STRATEGY_CLASSES = {
+    "mean_reversion": MeanReversionStrategy,
+    "momentum": MomentumStrategy,
+    "dca": DCAStrategy,
+}
+
 
 class MatchEngine:
     """比赛执行引擎"""
@@ -47,24 +54,12 @@ class MatchEngine:
             self.cost_basis[strategy.id] = {}
             self.win_trade_count[strategy.id] = 0
 
-            # 实例化策略
-            if strategy.type == "mean_reversion":
-                strategy_instance = MeanReversionStrategy(
-                    strategy.id,
-                    strategy.params.model_dump()
-                )
-            elif strategy.type == "momentum":
-                strategy_instance = MomentumStrategy(
-                    strategy.id,
-                    strategy.params.model_dump()
-                )
-            elif strategy.type == "dca":
-                strategy_instance = DCAStrategy(
-                    strategy.id,
-                    strategy.params.model_dump()
-                )
-            else:
+            # 实例化策略（通过注册表，便于扩展）
+            try:
+                strategy_cls = STRATEGY_CLASSES[strategy.type]
+            except KeyError:
                 raise ValueError(f"不支持的策略类型: {strategy.type}")
+            strategy_instance = strategy_cls(strategy.id, strategy.params.model_dump())
 
             strategy_instance.set_portfolio(portfolio)
             self.strategies_instances[strategy.id] = strategy_instance

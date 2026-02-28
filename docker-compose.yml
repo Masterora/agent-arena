@@ -73,7 +73,7 @@ services:
     networks:
       - agent-arena-network
     restart: unless-stopped
-    command: uvicorn app.main:app --host 0.0.0.0 --port 9000 --reload
+    command: ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 9000 --reload"]
 
   # pgAdmin (数据库管理工具)
   pgadmin:

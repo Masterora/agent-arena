@@ -6,6 +6,7 @@ export const useStrategies = () => {
   return useQuery({
     queryKey: ["strategies"],
     queryFn: strategiesApi.getAll,
+    staleTime: 60_000, // 1 分钟内不重复请求
   });
 };
 

@@ -1,5 +1,6 @@
 import sys
 import uuid
+from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,7 +12,12 @@ from app.config import settings
 from app.database import init_db
 from app.api import strategies, matches, market
 
-# 配置日志
+# 配置日志（log_file 转为基于 backend 根目录的绝对路径，避免工作目录变化导致写错位置）
+_log_dir = Path(__file__).resolve().parent.parent  # backend/
+_log_file = Path(settings.log_file)
+if not _log_file.is_absolute():
+    _log_file = (_log_dir / _log_file).resolve()
+_log_file.parent.mkdir(parents=True, exist_ok=True)
 logger.remove()
 logger.add(
     sys.stdout,
@@ -19,7 +25,7 @@ logger.add(
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan> - <level>{message}</level>"
 )
 logger.add(
-    settings.log_file,
+    str(_log_file),
     rotation="500 MB",
     retention="10 days",
     compression="zip"
