@@ -32,5 +32,5 @@ RUN mkdir -p /app/data /app/logs
 # 暴露端口
 EXPOSE 9000
 
-# 启动前执行迁移，再启动服务
-CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 9000"]
+# 启动前执行迁移，再启动服务（PORT 由 Render 等平台注入，默认 9000）
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-9000}"]
